@@ -113,33 +113,26 @@ Applicant.init({
 });
 
 // --- Define Associations ---
+User.hasOne(Applicant, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', onUpdate: 'CASCADE', as: 'ApplicantProfile' }); // Added alias
+Applicant.belongsTo(User, { foreignKey: 'Applicant_ID', as: 'UserDetails' }); // Added alias
 
-// One-to-One relationship: An Applicant is a User
-User.hasOne(Applicant, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
-Applicant.belongsTo(User, { foreignKey: 'Applicant_ID' });
+Applicant.hasMany(Education, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Educations' });
+Education.belongsTo(Applicant, { foreignKey: 'Applicant_ID', as: 'Applicant' });
 
-// Applicant has many Educations
-Applicant.hasMany(Education, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE' });
-Education.belongsTo(Applicant, { foreignKey: 'Applicant_ID' });
+Applicant.hasMany(Certification, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Certifications' });
+Certification.belongsTo(Applicant, { foreignKey: 'Applicant_ID', as: 'Applicant' });
 
-// Applicant has many Certifications
-Applicant.hasMany(Certification, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE' });
-Certification.belongsTo(Applicant, { foreignKey: 'Applicant_ID' });
+Applicant.hasMany(Work_exp, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'WorkExperiences' });
+Work_exp.belongsTo(Applicant, { foreignKey: 'Applicant_ID', as: 'Applicant' });
 
-// Applicant has many WorkExperiences
-Applicant.hasMany(WorkExperience, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE' });
-WorkExperience.belongsTo(Applicant, { foreignKey: 'Applicant_ID' });
+// WorkExperience to CompanyInformation
+CompanyInformation.hasMany(Work_exp, { foreignKey: 'CompanyInfo_ID', onDelete: 'SET NULL', as: 'WorkExperiences' });
+Work_exp.belongsTo(CompanyInformation, { foreignKey: 'CompanyInfo_ID', as: 'CompanyInformation' }); // 'as' must match include
 
-// WorkExperience belongs to CompanyInformation (One company can have many work entries)
-CompanyInformation.hasMany(WorkExperience, { foreignKey: 'CompanyInfo_ID', onDelete: 'SET NULL' }); // If company is deleted, set FK to NULL in WorkExperience
-WorkExperience.belongsTo(CompanyInformation, { foreignKey: 'CompanyInfo_ID' });
+Applicant.hasMany(Preference, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Preferences' });
+Preference.belongsTo(Applicant, { foreignKey: 'Applicant_ID', as: 'Applicant' });
 
-// Applicant has many Preferences
-Applicant.hasMany(Preference, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE' });
-Preference.belongsTo(Applicant, { foreignKey: 'Applicant_ID' });
+// Applicant.hasMany(Attachment, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Attachments' });
+// Attachment.belongsTo(Applicant, { foreignKey: 'Applicant_ID', as: 'Applicant' });
 
-// Applicant has many Attachments
-Applicant.hasMany(Attachment, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE' });
-Attachment.belongsTo(Applicant, { foreignKey: 'Applicant_ID' });
-
-module.exports = Applicant;
+module.exports = Applicant; 

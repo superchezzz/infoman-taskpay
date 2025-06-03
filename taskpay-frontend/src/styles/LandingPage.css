@@ -1,0 +1,97 @@
+.landing-page-container{
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+    background-color: #2A2A2A;
+    min-height: 100vh;
+    padding-top: 100px;
+}
+
+.auth-card{
+    width: 720px;
+    height: 300px;
+    background-color: #414141;
+    padding: 20px;
+    border-radius: 30px;
+    line-height: 3rem;
+
+}
+
+.hf-button{
+    width: 630px;
+    background-color: white;
+    border-radius: 30px;
+    margin-top: 20px;
+}
+.auth-text{
+    align-items: center;
+    justify-content: center;
+}
+.toggle-btn {
+    flex: 1;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    color: black;
+    background-color: transparent;
+    white-space: nowrap;
+  }
+  
+  .toggle-btn.active {
+    border: 2px solid #f3bd06;
+    color: #333;
+
+  }
+  .quote{
+    width: 320px;
+    height: 55px;
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    margin-bottom: 40px;
+  }
+
+  .reg-button {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%; 
+    margin-top: 30px;
+  }
+  
+  .login-button {
+    background-color: transparent;
+    height: 55px;
+    width: 170px;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: medium;
+    transition: all 0.3s ease;
+  }
+  
+  .login-button:hover {
+    text-decoration: underline; 
+    color: #e0e0e0;
+  }
+  
+  .signup-button {
+    background-color: #f3bd06;
+    color: white;
+    border: none;
+    height: 55px;
+    width: 170px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+  
+  .signup-button:hover {
+    background-color: #e0a800; 
+  }

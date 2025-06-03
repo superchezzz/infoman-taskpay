@@ -1,18 +1,39 @@
-import React from 'react'
+import React,{useState} from 'react'
+import "../styles/LandingPage.css"
 
 
 function LandingPage(){
-  return (
-    <div>
-        <h1 className="text-5xl font-bold text-gray-900 leading-tight">Delivering talent to every task</h1>
-        <p>Your Skills. Their Needs. One Platform.</p>
+  const [activeTab, setActiveTab] = useState("hireTalent");
+  const handleTabClick = (tabName) =>{
+    setActiveTab(tabName);
+  };
+  const getQuote = () =>{
+    if(activeTab == "hireTalent"){
+      return '"Find The Right Skills, Right When You Need Them."';
+    } else if (activeTab == "findTask"){
+      return `"Get Paid For What You're Great At."`;
+   } return "";
+  } 
 
-        <div className='search-box'>
-            <input type="text" placeholder='Seach by role, skills, keywords'/>
-            <img src='' alt=''/>
+  return (
+    <div className="landing-page-container items-center justify-items-center">
+        <div className="items-center justify-items-center">
+          <h1 className="text-[65px] font-bold text-gray-900 leading-tight ">Delivering talent to every task</h1>
+          <p className="text-[18px] font-medium">Your Skills. Their Needs. One Platform.</p>
         </div>
 
-        <img src='' alt='' className='toggle-icon'/>
+        <div className='auth-card items-center justify-items-center'>
+            <div className="hf-button flex row gap-5 color-black">
+              <button className={`toggle-btn ${activeTab==="hireTalent" ? "active" : ""}`} onClick={() => handleTabClick("hireTalent")}>Hire Talent</button>
+              <button className={`toggle-btn ${activeTab==="findTask" ? "active" : ""}`} onClick={() => handleTabClick("findTask")}>Find Task</button>
+            </div>
+            <p className="quote color-white text-[16px] font-bold italic leading-tight ">{getQuote()}</p>
+            <div className="reg-button flex row gap-5">
+              <button className="login-button">Login</button>
+              <button className="signup-button">Sign Up</button>
+            </div>
+        </div>
+
     </div>
   )
 }

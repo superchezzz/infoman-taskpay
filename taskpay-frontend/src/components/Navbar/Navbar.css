@@ -1,11 +1,31 @@
+@import "tailwindcss";
+
 *{
-    margin: 0;
+    margin: 10;
     padding: 0;
     box-sizing: border-box;
-    font-family: sans-serif;
+    font-family: "Figtree", sans-serif;
+    background-color: #2A2A2A;
+    color: #FFFFFF;
 }
 .container{
     min-width: 100vw;
     min-height: 100vh;
-    background: #fec400;
 }
+
+.Navbar{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+}
+.taskpay-FFE773,
+.taskpay-span-FEC400{
+    color: #FFE773; 
+    font-family: "Montserrat", sans-serif;
+    font-weight: 700;
+}
+.taskpay-span-FEC400{
+    color: #FEC400;
+}
+

@@ -4,23 +4,19 @@ const Navbar = () => {
   return (
     <div className='Navbar'>
         
-        <img src='' alt='' className='logo' />
+        <h1 className="taskpay-FFE773">Task<span className="taskpay-span-FEC400">Pay</span></h1>
         
-        <ul>
+        <ul className="flex row list-none gap-10">
             <li>Home</li>
-            <li>Home</li>
-            <li>Home</li>
-            <li>Home</li>   
+            <li>Jobs</li>
+            <li>About Us</li>
+            <li>Contact Us</li>   
         </ul>
 
-        <div className='search-box'>
-            <input type="text" placeholder='Search'/>
-            <img src='' alt=''/>
-        </div>
 
-        <img src='' alt='' className='toggle-icon'/>
     </div>
   )
 }
 
 export default Navbar
+

@@ -1,10 +1,12 @@
 import React from 'react'
 import Navbar from './components/Navbar/Navbar'
+import LandingPage from './pages/LandingPage';
 
-const App = () => {
+function App(){
   return (
     <div  className='container'>  
       <Navbar />
+      <LandingPage />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config();
 const { Sequelize } = require('sequelize');
 
 const sequelize = new Sequelize(
@@ -8,26 +8,21 @@ const sequelize = new Sequelize(
     {
         host: process.env.DB_HOST,
         dialect: process.env.DB_DIALECT,
-        logging: console.log, // Log SQL queries to the console (remove or set to false in production)
-        pool: { // Optional: connection pooling parameters
-            max: 5,
-            min: 0,
-            acquire: 30000,
-            idle: 10000
-        }
+        logging: console.log, // Or false
+        pool: { /* ... */ }
     }
 );
 
+// The connectDB function just authenticates now.
+// Model loading and association happens via models/index.js
 const connectDB = async () => {
     try {
         await sequelize.authenticate();
         console.log('MySQL Connection has been established successfully via Sequelize.');
-        // await sequelize.sync({ alter: true }); // or { force: true } to drop and recreate (DANGEROUS)
-        // console.log("All models were synchronized successfully.");
     } catch (error) {
         console.error('Unable to connect to the database via Sequelize:', error);
-        process.exit(1); // Exit process with failure if DB connection fails
+        process.exit(1);
     }
 };
 
-module.exports = { sequelize, connectDB };
+module.exports = { sequelize, connectDB }; // Export sequelize instance

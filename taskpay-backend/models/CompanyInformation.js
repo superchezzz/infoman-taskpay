@@ -1,0 +1,36 @@
+module.exports = (sequelize, DataTypes) => {
+    class CompanyInformation extends sequelize.Sequelize.Model {
+        static associate(models) {
+            // CompanyInformation has many WorkExperiences
+            CompanyInformation.hasMany(models.WorkExperience, {
+                foreignKey: 'CompanyInfo_ID',
+                as: 'WorkExperiencesAtCompany', // Changed alias to be more specific from Company's view
+                onDelete: 'SET NULL'
+            });
+        }
+    }
+
+    CompanyInformation.init({
+        CompanyInfo_ID: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true
+        },
+        Cmp_Name: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+            unique: true
+        },
+        Cmp_Address: {
+            type: DataTypes.TEXT,
+            allowNull: true
+        }
+    }, {
+        sequelize,
+        modelName: 'CompanyInformation',
+        tableName: 'COMPANY_INFORMATION',
+        timestamps: true // Or false if you added columns manually
+    });
+
+    return CompanyInformation;
+};

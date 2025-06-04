@@ -20,7 +20,7 @@ function LandingPage(){
   return (
     <div className="landing-page-container items-center justify-items-center">
         <div className="items-center justify-items-center">
-          <h1 className="text-[65px] text-white font-bold  leading-tight ">Delivering talent to every task</h1>
+          <h1 className="text-[65px] text-white font-bold  leading-tight text-center ">Delivering talent to every task</h1>
           <p className="text-[18px] font-medium text-white text-opacity-80">Your Skills. Their Needs. One Platform.</p>
         </div>
 

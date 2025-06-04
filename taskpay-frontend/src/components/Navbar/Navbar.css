@@ -1,13 +1,19 @@
 @import "tailwindcss";
 
 *{
-    margin: 10;
+    margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: "Figtree", sans-serif;
 
     color: #FFFFFF;
 }
+
+body {
+    overflow-x: hidden; 
+    width: 100%;
+}
+
 .container{
     min-width: 100vw;
     min-height: 100vh;
@@ -19,14 +25,38 @@
     flex-direction: row;
     align-items: center;
     gap: 20px;
+    padding: 15px 40px;
+    width: 100%; 
 }
+
+.Navbar ul{
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .taskpay-FFE773,
 .taskpay-span-FEC400{
     color: #FFE773; 
     font-family: "Montserrat", sans-serif;
     font-weight: 700;
+    cursor: pointer;
 }
+
 .taskpay-span-FEC400{
     color: #FEC400;
 }
 
+.active-nav-link {
+    color: #FEC400;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.Navbar ul li:not(.active-nav-link) {
+    transition: color 0.3s ease;
+}
+
+.Navbar ul li:not(.active-nav-link):hover {
+    color: #a0a0a0;
+    cursor: pointer;
+}

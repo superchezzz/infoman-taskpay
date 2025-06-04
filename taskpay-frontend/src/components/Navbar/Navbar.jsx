@@ -7,7 +7,7 @@ const Navbar = () => {
         <h1 className="taskpay-FFE773">Task<span className="taskpay-span-FEC400">Pay</span></h1>
         
         <ul className="flex row list-none gap-10 items-center justify-items-center">
-            <li>Home</li>
+            <li className="active-nav-link">Home</li>
             <li>Jobs</li>
             <li>About Us</li>
             <li>Contact Us</li>   

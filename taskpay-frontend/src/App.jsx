@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar/Navbar'
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 function App(){
   return (
@@ -19,6 +20,7 @@ function App(){
           }
         />
         <Route path="/login" element={<Login />} /> 
+        <Route path="/signup" element={<Signup />} /> 
       </Routes>
     </React.Fragment>
 

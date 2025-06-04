@@ -20,12 +20,12 @@
     padding-top: 30px;
 }
 
-.form-group {
+.login-form-group {
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
-.form-group-input{
+.login-form-group-input{
     border: 1px solid #5A5A5A;
     border-radius: 10px;
     padding: 10px;

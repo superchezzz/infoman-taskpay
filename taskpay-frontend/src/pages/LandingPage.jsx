@@ -32,7 +32,7 @@ function LandingPage(){
             <p className="quote text-white text-[16px] font-bold italic leading-tight ">{getQuote()}</p>
             <div className="reg-button flex row gap-5">
               <button className="login-button" onClick={() => nav('/login')}>Login</button>
-              <button className="signup-button" onClick={() => nav('/login')}>Sign Up</button>
+              <button className="signup-button" onClick={() => nav('/signup')}>Sign Up</button>
             </div>
         </div>
 

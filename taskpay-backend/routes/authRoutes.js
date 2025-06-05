@@ -8,13 +8,6 @@ const { User, Applicant, Role, UserRole } = require('../models'); // This now po
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
-// ... (rest of your authRoutes.js code remains the same, as it uses User, Applicant, Role, UserRole) ...
-// Make sure the generateToken, /register, and /login routes are here.
-// The code for generateToken, router.post('/register', ...), and router.post('/login', ...)
-// from the previous "Phase 2: Refactor authRoutes.js" step should be here.
-// I'll paste the full authRoutes.js again for clarity in the next step if needed.
-// For now, the key change is the import line above.
-
 // --- Helper function to generate JWT ---
 const generateToken = (userId, activeRole) => {
     if (!process.env.JWT_SECRET) {

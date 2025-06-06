@@ -1,19 +1,25 @@
 import React, {useState} from 'react'
+import "../styles/ApplicantDashboard.css"
 
 function ApplicantDashboard (){
     const [applicantFirstName, setApplicantFirstName] = useState("User");
     return (
-        <div>
-            <div className="flex flex-row">
-                <h1 className="">TaskPay</h1>
-                <div>
-                    <p>Welcome, {applicantFirstName} </p>
-                    <p className="text-16px font-bold">Applicant Dashboard</p>
+        <div className="applicant-dashboard-container min-h-screen">
+            <div className="applicant-dashboard-header flex flex-row items-center">
+                <h1 className="applicant-taskpay-title text-[32px] tracking-[3px] font-bold">Task<span>Pay</span></h1>
+                <div className="applicant-dashboard-name-img-container leading-[15px]">
+                    <div>
+                        <p className="tracking-[3px] font-bold text-18px">Welcome, {applicantFirstName} </p>
+                        <p className="application-dashboard-text tracking-[3px] text-16px font-bold">Applicant Dashboard</p>
+                    </div>
+                    <div>
+                        <img></img>
+                    </div>
                 </div>
 
             </div>
-            <div>
-                <div>
+            <div className="applicant-dashboard-body-container flex flex-row">
+                <div className="my-profile-container">
                     <div className="flex flex-column items-center">
                         <svg width="33" height="34" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M16.4615 16.765C20.1788 16.765 23.1923 13.6376 23.1923 9.77973C23.1923 5.92186 20.1788 2.79443 16.4615 2.79443C12.7442 2.79443 9.73071 5.92186 9.73071 9.77973C9.73071 13.6376 12.7442 16.765 16.4615 16.765Z" stroke="#5A5A5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -26,9 +32,15 @@ function ApplicantDashboard (){
                     </svg>
 
                     <div>
-                        <p>f</p>
+                        <p>My Task Appl</p>
                     </div>
                 </div>
+                <div className="my-task-application-container">
+                    <p>My Task Application</p>
+                </div>
+            </div>
+            <div className="applicant-dashboard-footer">
+
             </div>
 
         </div>

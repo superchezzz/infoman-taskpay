@@ -1,0 +1,40 @@
+.applicant-dashboard-container{
+    font-family: "Figtree", "Montserrat", sans-serif;
+
+}
+
+.applicant-dashboard-header{
+    background-color: #f8f8ff;
+    width: 1260px;
+    height: 90px;
+    margin: 40px auto;
+}
+
+.applicant-taskpay-title{
+    color: #ffe773;
+}
+.applicant-taskpay-title span{
+    color: #fec400;
+}
+
+.application-dashboard-text{
+    color: #2a2a2a;
+    opacity: 0.6;
+}
+
+.applicant-dashboard-body-container{
+    gap:20px;
+    align-items: center;
+}
+.my-profile-container{
+    background-color: #f8f8ff;
+    width: 420px;
+    height: 570px;
+
+}
+
+.my-task-application-container{
+    background-color: #f8f8ff;
+    width: 810px;
+    height: 570px;
+}

@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ApplicantDashboard from './pages/ApplicantDashboard';
 
+
 function App(){
   return (
     <React.Fragment>

@@ -1,8 +1,39 @@
-import React, {useState} from 'react'
-import "../styles/ApplicantDashboard.css"
+import React, { useState } from 'react';
+import "../styles/ApplicantDashboard.css";
+import TaskApplicationStatus from '../components/Card/taskApplicationStatus/taskApplicationStatus';
 
 function ApplicantDashboard (){
     const [applicantFirstName, setApplicantFirstName] = useState("User");
+    const taskApplications = [
+        {
+            jobTitle: "Data Entry Specialist",
+            applicationDate: "January 15, 2025",
+            salary: "8,000",
+            clientName: "Maria Santos",
+            applicationStatus: "Pending"
+        },
+        {
+            jobTitle: "Content Writer",
+            applicationDate: "January 15, 2025",
+            salary: "8,000",
+            clientName: "Pedro Dela Paz",
+            applicationStatus: "Approved"
+        },
+        {
+            jobTitle: "Virtual Assistant",
+            applicationDate: "January 15, 2025",
+            salary: "8,000",
+            clientName: "Maria Santos",
+            applicationStatus: "In Progress"
+        },
+        {
+            jobTitle: "Graphic Designer",
+            applicationDate: "January 15, 2025",
+            salary: "8,000",
+            clientName: "Maria Santos",
+            applicationStatus: "Completed"
+        },
+    ];
     return (
         <div className="applicant-dashboard-container min-h-screen">
             <div className="applicant-dashboard-header flex flex-row items-center">
@@ -22,14 +53,14 @@ function ApplicantDashboard (){
                 <div className="my-profile-container">
                     <div className="my-profile-header flex flex-column items-center">
                         <svg width="33" height="34" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M16.4615 16.765C20.1788 16.765 23.1923 13.6376 23.1923 9.77973C23.1923 5.92186 20.1788 2.79443 16.4615 2.79443C12.7442 2.79443 9.73071 5.92186 9.73071 9.77973C9.73071 13.6376 12.7442 16.765 16.4615 16.765Z" stroke="#5A5A5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M28.0249 30.7355C28.0249 25.3288 22.8422 20.9561 16.4614 20.9561C10.0806 20.9561 4.89795 25.3288 4.89795 30.7355" stroke="#5A5A5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M16.4615 16.765C20.1788 16.765 23.1923 13.6376 23.1923 9.77973C23.1923 5.92186 20.1788 2.79443 16.4615 2.79443C12.7442 2.79443 9.73071 5.92186 9.73071 9.77973C9.73071 13.6376 12.7442 16.765 16.4615 16.765Z" stroke="#5A5A5A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M28.0249 30.7355C28.0249 25.3288 22.8422 20.9561 16.4614 20.9561C10.0806 20.9561 4.89795 25.3288 4.89795 30.7355" stroke="#5A5A5A" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                         <h1 className="text-[18px] font-semibold tracking-[3px]">My Profile</h1>
                     </div>
                     <div className="svg-line-wrapper">
                         <svg width="356" height="1" viewBox="0 0 356 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <line x1="4.11158e-08" y1="0.5" x2="356" y2="0.500033" stroke="#5A5A5A" stroke-opacity="0.15"/>
+                            <line x1="4.11158e-08" y1="0.5" x2="356" y2="0.500033" stroke="#5A5A5A" strokeOpacity="0.15"/>
                         </svg>
                     </div>
 
@@ -47,6 +78,16 @@ function ApplicantDashboard (){
                 </div>
                 <div className="my-task-application-container">
                     <p>My Task Application</p>
+                    {taskApplications.map((task, index) => (
+                        <TaskApplicationStatus
+                            key={index}
+                            jobTitle={task.jobTitle}
+                            applicationDate={task.applicationDate}
+                            salary={task.salary}
+                            clientName={task.clientName}
+                            applicationStatus={task.applicationStatus}
+                        />
+                    ))}
                 </div>
             </div>
             <div className="applicant-dashboard-functionalities flex flex-row">
@@ -78,7 +119,7 @@ function ApplicantDashboard (){
             </div>
 
         </div>
-  )
+    );
 }
 
-export default ApplicantDashboard
+export default ApplicantDashboard;

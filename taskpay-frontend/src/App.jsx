@@ -17,12 +17,12 @@ function App(){
             <>
               <Navbar />
               <LandingPage />
-
             </>
           }
         />
         <Route path="/login" element={<Login />} /> 
         <Route path="/signup" element={<Signup />} /> 
+        <Route path="/dashboard" element={<ApplicantDashboard />} /> 
       </Routes>
     </React.Fragment>
 

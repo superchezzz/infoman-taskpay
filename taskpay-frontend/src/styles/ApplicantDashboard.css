@@ -1,17 +1,22 @@
 .applicant-dashboard-container{
     font-family: "Figtree", "Montserrat", sans-serif;
-
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    margin-bottom: 50px;
 }
 
 .applicant-dashboard-header{
     background-color: #f8f8ff;
     width: 1260px;
     height: 90px;
-    margin: 40px auto;
+    margin: 40px auto 0 auto;
+    border-radius: 10px;
 }
 
 .applicant-taskpay-title{
     color: #ffe773;
+    padding-left: 30px;
 }
 .applicant-taskpay-title span{
     color: #fec400;
@@ -23,18 +28,75 @@
 }
 
 .applicant-dashboard-body-container{
-    gap:20px;
+    gap: 30px;
     align-items: center;
+    justify-content: center;
 }
+
 .my-profile-container{
     background-color: #f8f8ff;
     width: 420px;
     height: 570px;
-
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-radius: 10px;
 }
 
+.my-profile-header{
+    padding-left: 30px;
+    gap: 10px;
+}
+
+.svg-line-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center; 
+    width: 100%;
+}
+
+.my-profile-info-container{
+    background-color: white;
+    width: 362px;
+    height: 360px;
+    margin-left: auto;
+    margin-right: auto
+}
+.id-container{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 134px;
+    height: 34px;
+    background-color: #f3bd06;
+    color: white;
+    border-radius: 20px;
+    text-align: center;
+
+}
 .my-task-application-container{
     background-color: #f8f8ff;
     width: 810px;
     height: 570px;
+} 
+
+
+.applicant-dashboard-functionalities{
+    justify-content: center;
+    gap: 45px;
+}
+
+.apply-container,
+.view-container,
+.mydocs-container{
+    width: 390px;
+    height: 210px;
+    background-color: #f8f8ff ;
+    border: 1px solid #d0d0d0;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }

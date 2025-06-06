@@ -4,6 +4,7 @@ import Navbar from './components/Navbar/Navbar'
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import ApplicantDashboard from './pages/ApplicantDashboard';
 
 function App(){
   return (
@@ -16,6 +17,7 @@ function App(){
             <>
               <Navbar />
               <LandingPage />
+              <ApplicantDashboard />
             </>
           }
         />

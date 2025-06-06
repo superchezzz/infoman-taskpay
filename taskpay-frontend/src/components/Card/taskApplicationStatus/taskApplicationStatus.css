@@ -1,0 +1,125 @@
+.task-application-status-card {
+    font-family: "Figtree", sans-serif;
+    background-color: white;
+    width: 750px;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.job-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #FEC400;
+    margin: 0;
+}
+
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-pending {
+    background-color: #FFF3E0;
+    color: #FF9800;
+}
+
+.status-approved {
+    background-color: #E8F5E9;
+    color: #4CAF50;
+}
+
+.status-in-progress {
+    background-color: #E0F2F7;
+    color: #2196F3;
+}
+
+.status-completed {
+    background-color: #F0F4F7;
+    color: #607D8B;
+}
+
+.card-details {
+    margin-bottom: 10px;
+}
+
+.details-text {
+    font-size: 10px;
+    color: #2A2A2A;
+}
+
+.card-actions {
+    display: flex;
+    
+    gap: 10px;
+}
+
+.card-button {
+    padding: 6px 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.card-button:hover {
+    opacity: 0.9;
+}
+
+.view-button {
+    background-color: #717171;
+    color: white;
+
+}
+
+.view-button:hover {
+    background-color: #f0f0f0;
+    color: black;
+
+}
+
+.withdraw-button {
+    background-color: #B7083C;
+    color: white;
+    border: none;
+    
+}
+
+.withdraw-button:hover {
+    background-color: #f0c2c2;
+}
+
+.start-task-button,
+.complete-button {
+    background-color: #43A048;
+    color: white;
+    border: none;
+}
+
+.start-task-button:hover,
+.update-progress-button:hover,
+.complete-button:hover {
+    background-color: #c8e6c9;
+}
+
+.update-progress-button{
+    background-color: #27548A;
+    color: white;
+    border: none;
+}

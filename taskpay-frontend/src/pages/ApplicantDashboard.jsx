@@ -1,55 +1,113 @@
-import React, { useState } from 'react';
+/**
+ * @file ApplicantDashboard.jsx
+ * @description Component for the main dashboard for users with the 'applicant' role.
+ * @date 2025-06-07
+ *
+ * @description
+ * This component serves as the applicant's home page after logging in.
+ * It fetches and displays the applicant's core profile information and a list of their
+ * current task applications by making authenticated API calls to the backend.
+ *
+ * It uses the JWT token stored in localStorage to authorize these requests.
+ * It also handles loading and error states to provide a better user experience.
+ */
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Import axios for making API calls
+import { useNavigate } from 'react-router-dom';
 import "../styles/ApplicantDashboard.css";
 import TaskApplicationStatus from '../components/Card/taskApplicationStatus/taskApplicationStatus';
 
-function ApplicantDashboard (){
-    const [applicantFirstName, setApplicantFirstName] = useState("User");
-    const taskApplications = [
-        {
-            jobTitle: "Data Entry Specialist",
-            applicationDate: "January 15, 2025",
-            salary: "8,000",
-            clientName: "Maria Santos",
-            applicationStatus: "Pending"
-        },
-        {
-            jobTitle: "Content Writer",
-            applicationDate: "January 15, 2025",
-            salary: "8,000",
-            clientName: "Pedro Dela Paz",
-            applicationStatus: "Approved"
-        },
-        {
-            jobTitle: "Virtual Assistant",
-            applicationDate: "January 15, 2025",
-            salary: "8,000",
-            clientName: "Maria Santos",
-            applicationStatus: "In Progress"
-        },
-        {
-            jobTitle: "Graphic Designer",
-            applicationDate: "January 15, 2025",
-            salary: "8,000",
-            clientName: "Maria Santos",
-            applicationStatus: "Completed"
-        },
-    ];
+function ApplicantDashboard() {
+    // State to hold data fetched from the backend
+    const [applicantProfile, setApplicantProfile] = useState(null);
+    const [taskApplications, setTaskApplications] = useState([]);
+
+    // State for loading and error handling
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const navigate = useNavigate();
+
+    // The useEffect hook runs once when the component mounts
+    useEffect(() => {
+        // Define an async function to fetch all necessary dashboard data
+        const fetchDashboardData = async () => {
+            setIsLoading(true);
+            setError('');
+
+            // Retrieve the auth token from localStorage
+            const authToken = localStorage.getItem('authToken');
+
+            if (!authToken) {
+                // If no token is found, the user is not authenticated.
+                // Redirect them to the login page.
+                setError('You are not authorized. Please log in.');
+                setIsLoading(false);
+                navigate('/login');
+                return;
+            }
+
+            // Create an axios instance with the authorization header to avoid repeating it
+            const api = axios.create({
+                baseURL: 'http://localhost:3001/api',
+                headers: {
+                    'Authorization': `Bearer ${authToken}`
+                }
+            });
+
+            try {
+                // Fetch both profile data and task applications concurrently
+                const [profileResponse, applicationsResponse] = await Promise.all([
+                    api.get('/profile/form'),     // Endpoint to get the applicant's detailed profile
+                    api.get('/applications/my') // Endpoint to get the applicant's task applications
+                ]);
+
+                // On success, update the state with the data from the backend
+                setApplicantProfile(profileResponse.data);
+                setTaskApplications(applicationsResponse.data.applications || []); // Default to empty array if no applications
+
+            } catch (err) {
+                // Handle errors from the API calls
+                console.error("Failed to fetch dashboard data:", err.response ? err.response.data : err.message);
+                setError(err.response?.data?.message || "Failed to load dashboard data. Please try refreshing the page.");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [navigate]); // Add navigate to the dependency array
+
+    // Display a loading message while data is being fetched
+    if (isLoading) {
+        return <div className="loading-container">Loading Dashboard...</div>;
+    }
+
+    // Display an error message if an error occurred
+    if (error) {
+        return <div className="error-container">{error}</div>;
+    }
+
+    // Render the main dashboard content
     return (
         <div className="applicant-dashboard-container min-h-screen">
             <div className="applicant-dashboard-header flex flex-row items-center">
                 <h1 className="applicant-taskpay-title text-[32px] tracking-[3px] font-bold">Task<span>Pay</span></h1>
                 <div className="applicant-dashboard-name-img-container leading-[15px]">
                     <div>
-                        <p className="tracking-[3px] font-bold text-18px">Welcome, {applicantFirstName} </p>
+                        {/* Use the fetched applicant's name */}
+                        <p className="tracking-[3px] font-bold text-18px">Welcome, {applicantProfile?.First_Name || 'User'} </p>
                         <p className="application-dashboard-text tracking-[3px] text-16px font-bold">Applicant Dashboard</p>
                     </div>
                     <div>
+                        {/* Placeholder for user profile image */}
                         <img></img>
                     </div>
                 </div>
-
             </div>
             <div className="applicant-dashboard-body-container flex flex-row">
+                {/* My Profile Section - Populated with fetched data */}
                 <div className="my-profile-container">
                     <div className="my-profile-header flex flex-column items-center">
                         <svg width="33" height="34" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -63,41 +121,51 @@ function ApplicantDashboard (){
                             <line x1="4.11158e-08" y1="0.5" x2="356" y2="0.500033" stroke="#5A5A5A" strokeOpacity="0.15"/>
                         </svg>
                     </div>
-
-                    <div className="my-profile-info-container">
-                        <div className="id-container">
-                            <h2>ID:</h2>
+                    {applicantProfile ? (
+                        <div className="my-profile-info-container">
+                            <div className="id-container">
+                                {/* Display formatted ID (can be enhanced later) */}
+                                <h2>ID: APP-2025-{String(applicantProfile.Applicant_ID).padStart(3, '0')}</h2>
+                            </div>
+                            <div>
+                                <p>Full Name: {`${applicantProfile.First_Name} ${applicantProfile.Middle_Name || ''} ${applicantProfile.Surname} ${applicantProfile.Suffix || ''}`.trim()}</p>
+                            </div>
+                            <div>
+                                <p>Sex: {applicantProfile.Sex}</p>
+                            </div>
+                            {/* Add other profile fields from applicantProfile object as needed */}
                         </div>
-                        <div>
-                            <p>Full Name:</p>
-                        </div>
-                        <div>
-                            <p>Sex:</p>
-                        </div>
-                    </div>
+                    ) : (
+                        <p>Profile information not available.</p>
+                    )}
                 </div>
+                {/* My Task Application Section - Populated with fetched data */}
                 <div className="my-task-application-container">
-                    <p>My Task Application</p>
-                    {taskApplications.map((task, index) => (
+                    <p className="my-task-application-title">My Task Application</p>
+                    {taskApplications.length > 0 ? taskApplications.map((application) => (
                         <TaskApplicationStatus
-                            key={index}
-                            jobTitle={task.jobTitle}
-                            applicationDate={task.applicationDate}
-                            salary={task.salary}
-                            clientName={task.clientName}
-                            applicationStatus={task.applicationStatus}
+                            key={application.ApplicationID}
+                            jobTitle={application.TaskDetails?.Title || 'N/A'}
+                            applicationDate={new Date(application.ApplicationDate).toLocaleDateString()}
+                            salary={application.TaskDetails?.Budget || 'N/A'}
+                            clientName={application.TaskDetails?.ClientName || 'N/A'}
+                            applicationStatus={application.Status}
                         />
-                    ))}
+                    )) : (
+                        <p>You have no active task applications.</p>
+                    )}
                 </div>
             </div>
+            {/* Action cards - functionality to be implemented */}
             <div className="applicant-dashboard-functionalities flex flex-row">
-                <div className="apply-container">
+                <div className="apply-container" onClick={() => navigate('/tasks')}>
                     <svg width="79" height="79" viewBox="0 0 79 79" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M53.9667 6.6665H26.0334C13.9001 6.6665 6.66675 13.8998 6.66675 26.0332V53.9332C6.66675 66.0998 13.9001 73.3332 26.0334 73.3332H53.9334C66.0667 73.3332 73.3001 66.0998 73.3001 53.9665V26.0332C73.3334 13.8998 66.1001 6.6665 53.9667 6.6665ZM60.0001 42.4998H42.5001V59.9998C42.5001 61.3665 41.3667 62.4998 40.0001 62.4998C38.6334 62.4998 37.5001 61.3665 37.5001 59.9998V42.4998H20.0001C18.6334 42.4998 17.5001 41.3665 17.5001 39.9998C17.5001 38.6332 18.6334 37.4998 20.0001 37.4998H37.5001V19.9998C37.5001 18.6332 38.6334 17.4998 40.0001 17.4998C41.3667 17.4998 42.5001 18.6332 42.5001 19.9998V37.4998H60.0001C61.3667 37.4998 62.5001 38.6332 62.5001 39.9998C62.5001 41.3665 61.3667 42.4998 60.0001 42.4998Z" fill="#FEC400"/>
                     </svg>
                     <h1 className="font-bold text-[24px]">Apply for New Task</h1>
                     <p className="text-[14px]">Browse available tasks and submit your application</p>
                 </div>
+                {/* Other action cards would also have onClick handlers */}
                 <div className="view-container">
                     <svg width="81" height="80" viewBox="0 0 81 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M73.8334 73.3333H7.16675C5.80008 73.3333 4.66675 72.1999 4.66675 70.8333C4.66675 69.4666 5.80008 68.3333 7.16675 68.3333H73.8334C75.2001 68.3333 76.3334 69.4666 76.3334 70.8333C76.3334 72.1999 75.2001 73.3333 73.8334 73.3333Z" fill="#FEC400"/>
@@ -117,7 +185,6 @@ function ApplicantDashboard (){
                     <p className="text-[14px]">Manage TIN, SSS, PhilHealth and other documents</p>
                 </div>
             </div>
-
         </div>
     );
 }

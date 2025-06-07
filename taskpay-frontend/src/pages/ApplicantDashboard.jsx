@@ -18,7 +18,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import "../styles/ApplicantDashboard.css";
 import TaskApplicationStatus from '../components/Card/taskApplicationStatus/taskApplicationStatus';
-import { Link } from 'react-router-dom';
 import { formatName } from "../utils/formatName.js";
 
 function ApplicantDashboard() {
@@ -192,7 +191,7 @@ function ApplicantDashboard() {
                             </div>
 
                             
-                            <Link to="/applicant/edit-profile"><div className="edit-profile-container"><p className="edit-profile-text">Edit Profile</p></div></Link>
+                            <div className="edit-profile-container" onClick={() => navigate("/applicant-edit-profile") }><p className="edit-profile-text">Edit Profile</p></div>
                         </div>
                     ) : (
                         <p>Profile information loading...</p>
@@ -222,7 +221,7 @@ function ApplicantDashboard() {
                 </div>
             </div>
             <div className="applicant-dashboard-functionalities flex flex-row">
-                <div className="apply-container" onClick={() => navigate('/tasks')}>
+                <div className="apply-container cursor-pointer" onClick={() => navigate('/tasks')}>
                     <svg width="79" height="79" viewBox="0 0 79 79" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M53.9667 6.6665H26.0334C13.9001 6.6665 6.66675 13.8998 6.66675 26.0332V53.9332C6.66675 66.0998 13.9001 73.3332 26.0334 73.3332H53.9334C66.0667 73.3332 73.3001 66.0998 73.3001 53.9665V26.0332C73.3334 13.8998 66.1001 6.6665 53.9667 6.6665ZM60.0001 42.4998H42.5001V59.9998C42.5001 61.3665 41.3667 62.4998 40.0001 62.4998C38.6334 62.4998 37.5001 61.3665 37.5001 59.9998V42.4998H20.0001C18.6334 42.4998 17.5001 41.3665 17.5001 39.9998C17.5001 38.6332 18.6334 37.4998 20.0001 37.4998H37.5001V19.9998C37.5001 18.6332 38.6334 17.4998 40.0001 17.4998C41.3667 17.4998 42.5001 18.6332 42.5001 19.9998V37.4998H60.0001C61.3667 37.4998 62.5001 38.6332 62.5001 39.9998C62.5001 41.3665 61.3667 42.4998 60.0001 42.4998Z" fill="#FEC400"/>
                     </svg>
@@ -230,7 +229,7 @@ function ApplicantDashboard() {
                     <h1 className="font-bold text-[24px]">Apply for New Task</h1>
                     <p className="text-[14px]">Browse available tasks and submit your application</p>
                 </div>
-                <div className="view-container">
+                <div className="view-container cursor-pointer">
                     <svg width="81" height="80" viewBox="0 0 81 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M73.8334 73.3333H7.16675C5.80008 73.3333 4.66675 72.1999 4.66675 70.8333C4.66675 69.4666 5.80008 68.3333 7.16675 68.3333H73.8334C75.2001 68.3333 76.3334 69.4666 76.3334 70.8333C76.3334 72.1999 75.2001 73.3333 73.8334 73.3333Z" fill="#FEC400"/>
                         <path d="M33 13.3334V73.3334H48V13.3334C48 9.66675 46.5 6.66675 42 6.66675H39C34.5 6.66675 33 9.66675 33 13.3334Z" fill="#FEC400"/>
@@ -242,7 +241,7 @@ function ApplicantDashboard() {
                     <h1 className="font-bold text-[24px]">View Task History</h1>
                     <p className="text-[14px]">Check your complete application and task history</p>
                 </div>
-                <div className="mydocs-container">
+                <div className="mydocs-container cursor-pointer">
                     <svg width="81" height="80" viewBox="0 0 81 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M68.8334 53.3333V61.6667C68.8334 68.1 63.6001 73.3333 57.1668 73.3333H23.8334C17.4001 73.3333 12.1667 68.1 12.1667 61.6667V59.5C12.1667 54.2667 16.4334 50 21.6667 50H65.5001C67.3334 50 68.8334 51.5 68.8334 53.3333Z" fill="#FEC400"/>
                         <path d="M52.1667 6.66675H28.8334C15.5001 6.66675 12.1667 10.0001 12.1667 23.3334V48.6001C14.7001 46.3667 18.0334 45.0001 21.6667 45.0001H65.5001C67.3334 45.0001 68.8334 43.5001 68.8334 41.6667V23.3334C68.8334 10.0001 65.5001 6.66675 52.1667 6.66675ZM43.8334 35.8334H27.1667C25.8001 35.8334 24.6667 34.7001 24.6667 33.3334C24.6667 31.9667 25.8001 30.8334 27.1667 30.8334H43.8334C45.2001 30.8334 46.3334 31.9667 46.3334 33.3334C46.3334 34.7001 45.2001 35.8334 43.8334 35.8334ZM53.8334 24.1667H27.1667C25.8001 24.1667 24.6667 23.0334 24.6667 21.6667C24.6667 20.3001 25.8001 19.1667 27.1667 19.1667H53.8334C55.2001 19.1667 56.3334 20.3001 56.3334 21.6667C56.3334 23.0334 55.2001 24.1667 53.8334 24.1667Z" fill="#FEC400"/>

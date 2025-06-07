@@ -23,7 +23,7 @@ function App(){
         />
         <Route path="/login" element={<Login />} /> 
         <Route path="/signup" element={<Signup />} /> 
-        <Route path="/dashboard" element={<ApplicantDashboard />} /> 
+        <Route path="/applicant-dashboard" element={<ApplicantDashboard />} /> 
       </Routes>
     </React.Fragment>
 

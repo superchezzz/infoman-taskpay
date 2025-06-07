@@ -1,7 +1,6 @@
 /**
  * @file ApplicantDashboard.jsx
  * @description Component for the main dashboard for users with the 'applicant' role.
- * @date 2025-06-07
  *
  * @description
  * This component serves as the applicant's home page after logging in.
@@ -30,20 +29,19 @@ function ApplicantDashboard() {
     const navigate = useNavigate();
 
     // The useEffect hook runs once when the component mounts
-    useEffect(() => {
-        // Define an async function to fetch all necessary dashboard data
-        const fetchDashboardData = async () => {
+        useEffect(() => {
+            // Define an async function to fetch all necessary dashboard data
+            const fetchDashboardData = async () => {
             setIsLoading(true);
             setError('');
 
-            // Retrieve the auth token from localStorage
             const authToken = localStorage.getItem('authToken');
+            console.log('ApplicantDashboard: authToken from localStorage:', authToken ? 'Exists' : 'Does NOT exist'); // ADD THIS
 
             if (!authToken) {
-                // If no token is found, the user is not authenticated.
-                // Redirect them to the login page.
                 setError('You are not authorized. Please log in.');
                 setIsLoading(false);
+                console.log('ApplicantDashboard: No token, redirecting to /login'); // ADD THIS
                 navigate('/login');
                 return;
             }

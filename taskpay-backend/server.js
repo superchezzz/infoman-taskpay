@@ -8,8 +8,8 @@
  * and starts the server.
  *
  * @modification
- * Added and mounted the new 'fileUploadRoutes' to handle file uploads,
- * such as applicant resumes.
+ * Added and mounted the new 'clientRoutes.js' to handle API endpoints
+ * specific to the 'client' user role, such as viewing posted tasks.
  */
 
 require('dotenv').config();
@@ -24,7 +24,8 @@ const applicantProfileRoutes = require('./routes/applicantProfileRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
-const fileUploadRoutes = require('./routes/fileUploadRoutes'); // <-- 1. IMPORT the new routes for file uploads
+const fileUploadRoutes = require('./routes/fileUploadRoutes');
+const clientRoutes = require('./routes/clientRoutes');
 
 // Middleware imports
 const { protect } = require('./middleware/authMiddleware');
@@ -59,8 +60,6 @@ const corsOptions = {
 
 // Enable CORS with our specific options.
 app.use(cors(corsOptions));
-
-
 app.use(express.json()); // To parse JSON request bodies
 app.use(express.urlencoded({ extended: false })); // To parse URL-encoded bodies
 
@@ -76,7 +75,8 @@ app.use('/api/profile', protect, applicantProfileRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/applications', protect, applicationRoutes);
-app.use('/api/uploads', protect, fileUploadRoutes); // <-- 2. MOUNT the new upload routes (protected)
+app.use('/api/uploads', protect, fileUploadRoutes); 
+app.use('/api/clients', clientRoutes); 
 
 // --- Centralized Error Handling ---
 app.use((err, req, res, next) => {

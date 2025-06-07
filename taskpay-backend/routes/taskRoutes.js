@@ -3,92 +3,156 @@
  * @description Defines API routes for task-related functionalities.
  *
  * @modification
- * Added the POST / endpoint for creating a new task. This endpoint is protected
- * and can only be accessed by authenticated users with the 'client' role.
- * It handles validation and saves the new task to the database.
+ * This file handles all general interactions with tasks. This includes public-facing
+ * routes for viewing available tasks, as well as protected, client-only routes for
+ * creating, editing, deleting, and managing the status of tasks they own.
  */
 
 const express = require('express');
 const router = express.Router();
-const { protect, authorizeClient } = require('../middleware/authMiddleware'); // Import new client authorization
-const { Task, TaskApplication, User, Sequelize, Applicant } = require('../models'); // Import models
+const { protect, authorizeClient } = require('../middleware/authMiddleware');
+const { Task, TaskApplication, User, Applicant, Sequelize } = require('../models');
 const { Op } = Sequelize;
 
 // @route   POST /api/tasks
 // @desc    A logged-in client creates a new task
 // @access  Private (Client only)
 router.post('/', protect, authorizeClient, async (req, res) => {
-    // Destructure expected fields from the request body
-    const {
-        Title,
-        Description,
-        Budget,
-        Category,
-        Location,
-        Deadline,
-        Duration,
-    } = req.body;
+    const { Title, Description, Budget, Category, Location, Deadline, Duration } = req.body;
 
-    // --- Basic Validation ---
+    // Basic Validation
     if (!Title || !Description || !Category) {
         return res.status(400).json({ message: 'Please provide a Title, Description, and Category for the task.' });
     }
 
     try {
-        // The user ID is available from the 'protect' middleware
         const clientId = req.user.UserID;
-
-        // Optional: Fetch the client's name from their Applicant profile if they have one,
-        // or a future ClientProfile. For now, we can leave ClientName to be set manually
-        // or find a default. Let's assume the user object from protect might have the name.
-        // For a more robust solution, we'd fetch the user's name from their profile.
-        // Let's assume for now ClientName is not automatically populated.
-        // The frontend could send it, or we can fetch it. Let's require it from body for now.
-
+        // Find the user's name to associate with the task posting
         const clientUser = await User.findByPk(clientId, {
             include: {
-                model: Applicant,
+                model: Applicant, // A user's name info is in their Applicant profile
                 as: 'ApplicantProfile',
                 attributes: ['First_Name', 'Surname']
             }
         });
 
         // Construct a client name. Defaults to user email if no profile name exists.
-        const clientName = clientUser.ApplicantProfile
+        const clientName = clientUser?.ApplicantProfile
             ? `${clientUser.ApplicantProfile.First_Name} ${clientUser.ApplicantProfile.Surname}`
             : clientUser.Email;
 
-
-        // Create the new task in the database
         const newTask = await Task.create({
-            ClientID: clientId, // Link the task to the logged-in client
-            ClientName: clientName, // Use the fetched name
-            Title,
-            Description,
-            Budget,
-            Category,
-            Location,
-            Deadline,
-            Duration,
+            ClientID: clientId,
+            ClientName: clientName,
+            Title, Description, Budget, Category, Location, Deadline, Duration,
             TaskStatus: 'Open' // New tasks are always 'Open' by default
         });
 
-        res.status(201).json({
-            message: 'Task created successfully.',
-            task: newTask
-        });
+        res.status(201).json({ message: 'Task created successfully.', task: newTask });
 
     } catch (error) {
         console.error('Create Task Error:', error);
-        if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json({ message: 'Validation Error', errors: error.errors.map(e => e.message) });
-        }
         res.status(500).json({ message: 'Server error while creating task.', error: error.message });
     }
 });
 
+// @route   PUT /api/tasks/:taskId
+// @desc    Client edits a task they own
+// @access  Private (Client only)
+router.put('/:taskId', protect, authorizeClient, async (req, res) => {
+    const { taskId } = req.params;
+    const clientId = req.user.UserID;
+    const { Title, Description, Budget, Category, Location, Deadline, Duration } = req.body;
 
-// --- Existing Task Viewing Routes ---
+    try {
+        const task = await Task.findByPk(taskId);
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found.' });
+        }
+        if (task.ClientID !== clientId) {
+            return res.status(403).json({ message: 'Forbidden: You are not authorized to edit this task.' });
+        }
+
+        // Update the task with any new information provided
+        task.Title = Title || task.Title;
+        task.Description = Description || task.Description;
+        task.Budget = Budget || task.Budget;
+        task.Category = Category || task.Category;
+        task.Location = Location || task.Location;
+        task.Deadline = Deadline || task.Deadline;
+        task.Duration = Duration || task.Duration;
+
+        const updatedTask = await task.save();
+        res.status(200).json({ message: 'Task updated successfully.', task: updatedTask });
+
+    } catch (error) {
+        console.error('Update Task Error:', error);
+        res.status(500).json({ message: 'Server error while updating task.', error: error.message });
+    }
+});
+
+// @route   DELETE /api/tasks/:taskId
+// @desc    Client deletes a task they own
+// @access  Private (Client only)
+router.delete('/:taskId', protect, authorizeClient, async (req, res) => {
+    const { taskId } = req.params;
+    const clientId = req.user.UserID;
+
+    try {
+        const task = await Task.findByPk(taskId);
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found.' });
+        }
+        if (task.ClientID !== clientId) {
+            return res.status(403).json({ message: 'Forbidden: You are not authorized to delete this task.' });
+        }
+
+        // Delete the task. Associated TaskApplications will be deleted automatically
+        // because of the 'ON DELETE CASCADE' setting in the database foreign key.
+        await task.destroy();
+        res.status(200).json({ message: 'Task deleted successfully.' });
+
+    } catch (error) {
+        console.error('Delete Task Error:', error);
+        res.status(500).json({ message: 'Server error while deleting task.', error: error.message });
+    }
+});
+
+// @route   PUT /api/tasks/:taskId/status
+// @desc    Client updates the status of a task they own (e.g., Mark as Filled, Reopen Job)
+// @access  Private (Client only)
+router.put('/:taskId/status', protect, authorizeClient, async (req, res) => {
+    const { taskId } = req.params;
+    const clientId = req.user.UserID;
+    const { newStatus } = req.body;
+
+    // Validate the new status to ensure it's a value we allow
+    const allowedStatuses = ['Open', 'Filled', 'Closed', 'Completed', 'In Progress'];
+    if (!newStatus || !allowedStatuses.includes(newStatus)) {
+        return res.status(400).json({ message: 'Invalid or missing new status provided.' });
+    }
+
+    try {
+        const task = await Task.findByPk(taskId);
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found.' });
+        }
+        if (task.ClientID !== clientId) {
+            return res.status(403).json({ message: 'Forbidden: You are not authorized to update this task.' });
+        }
+
+        task.TaskStatus = newStatus;
+        const updatedTask = await task.save();
+        res.status(200).json({ message: `Task status updated to '${newStatus}'.`, task: updatedTask });
+
+    } catch (error) {
+        console.error('Update Task Status Error:', error);
+        res.status(500).json({ message: 'Server error while updating task status.', error: error.message });
+    }
+});
+
+
+// --- Public Task Viewing Routes ---
 
 // @route   GET /api/tasks/available
 // @desc    Get a list of all available tasks (TaskStatus = 'Open') with pagination
@@ -104,7 +168,6 @@ router.get('/available', async (req, res) => {
             limit,
             offset,
             order: [['PostedDate', 'DESC']]
-            // Add includes if needed (e.g., User as ClientPoster)
         });
 
         if (!tasks || tasks.length === 0) {
@@ -128,9 +191,7 @@ router.get('/available', async (req, res) => {
 router.get('/:taskId', async (req, res) => {
     const { taskId } = req.params;
     try {
-        const task = await Task.findByPk(taskId, {
-            // Add includes if needed
-        });
+        const task = await Task.findByPk(taskId);
         if (!task) {
             return res.status(404).json({ message: 'Task not found.' });
         }
@@ -141,6 +202,5 @@ router.get('/:taskId', async (req, res) => {
         res.status(500).json({ message: 'Server error while fetching task details.', error: error.message });
     }
 });
-
 
 module.exports = router;

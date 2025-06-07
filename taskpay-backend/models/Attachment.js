@@ -1,10 +1,9 @@
 module.exports = (sequelize, DataTypes) => {
     class Attachment extends sequelize.Sequelize.Model {
         static associate(models) {
-            // Attachment belongs to an Applicant
             Attachment.belongsTo(models.Applicant, {
                 foreignKey: 'Applicant_ID',
-                as: 'Applicant'
+                as: 'Applicant' // Optional alias
             });
         }
     }
@@ -39,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             allowNull: true
         },
-        UploadedAt: { // Manual timestamp, so Sequelize's timestamps can be false
+        UploadedAt: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW
         }

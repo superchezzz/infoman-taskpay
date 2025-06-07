@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
             Applicant.hasMany(models.Certification, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Certifications' });
             Applicant.hasMany(models.WorkExperience, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'WorkExperiences' });
             Applicant.hasMany(models.Preference, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Preferences' });
-            // Applicant.hasMany(models.Attachment, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Attachments' });
+            Applicant.hasMany(models.Attachment, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Attachments' });
         }
     }
 

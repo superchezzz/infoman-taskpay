@@ -58,7 +58,7 @@ CREATE TABLE `APPLICANT` (
 
 LOCK TABLES `APPLICANT` WRITE;
 /*!40000 ALTER TABLE `APPLICANT` DISABLE KEYS */;
-INSERT INTO `APPLICANT` VALUES (1,'Taskpay','One','Elmido','',28,'Male','Single','1996-03-15','Manila City','Blk 1 Lot 2','Sample Street','New Barangay','Quezon City','Metro Manila','111-222-333-000','02-1122334-5','010234567890','8877-1234','09100000001','None','Actively Looking','2025-06-04 17:17:52','2025-06-04 17:32:17'),(3,'dela cruz','andrei',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'09123456789',NULL,NULL,'2025-06-07 10:04:15','2025-06-07 10:04:15'),(4,'dela cruz','andrei',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'09123456789',NULL,NULL,'2025-06-07 10:07:59','2025-06-07 10:07:59');
+INSERT INTO `APPLICANT` VALUES (1,'Taskpay','One','Elmido','',28,'Male','Single','1996-03-15','Manila City','Blk 1 Lot 2','Sample Street','New Barangay','Quezon City','Metro Manila','111-222-333-000','02-1122334-5','010234567890','8877-1234','09100000001','None','Actively Looking','2025-06-04 17:17:52','2025-06-04 17:32:17'),(3,'dela cruz','andrei',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'09123456789',NULL,NULL,'2025-06-07 10:04:15','2025-06-07 10:04:15'),(4,'dela cruz','andrei',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'09123456789',NULL,NULL,'2025-06-07 10:07:59','2025-06-07 10:07:59'),(6,'test','dummy',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'09123456789',NULL,NULL,'2025-06-07 12:01:38','2025-06-07 12:01:38');
 /*!40000 ALTER TABLE `APPLICANT` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -270,7 +270,7 @@ CREATE TABLE `TaskApplications` (
   KEY `Task_ID` (`Task_ID`),
   CONSTRAINT `taskapplications_ibfk_1` FOREIGN KEY (`Applicant_ID`) REFERENCES `Users` (`UserID`) ON DELETE CASCADE,
   CONSTRAINT `taskapplications_ibfk_2` FOREIGN KEY (`Task_ID`) REFERENCES `Tasks` (`TaskID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -279,7 +279,7 @@ CREATE TABLE `TaskApplications` (
 
 LOCK TABLES `TaskApplications` WRITE;
 /*!40000 ALTER TABLE `TaskApplications` DISABLE KEYS */;
-INSERT INTO `TaskApplications` VALUES (1,1,2,'2025-06-04 18:08:58','Pending','please give me job i want to earn money so i can spend on a harith skin as well as purchase some skincare products please please please i need to glow up my face please',6800.00,NULL,NULL,'2025-06-04 18:08:58','2025-06-04 18:08:58');
+INSERT INTO `TaskApplications` VALUES (1,1,2,'2025-06-04 18:08:58','Pending','please give me job i want to earn money so i can spend on a harith skin as well as purchase some skincare products please please please i need to glow up my face please',6800.00,NULL,NULL,'2025-06-04 18:08:58','2025-06-04 18:08:58'),(2,3,2,'2025-06-07 13:24:28','Withdrawn','please give me job i want to earn money so i can spend on a harith skin as well as purchase some skincare products please please please i need to glow up my face please',6800.00,NULL,NULL,'2025-06-07 13:24:28','2025-06-07 13:26:13');
 /*!40000 ALTER TABLE `TaskApplications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -337,7 +337,7 @@ CREATE TABLE `UserRoles` (
   KEY `RoleID` (`RoleID`),
   CONSTRAINT `userroles_ibfk_1` FOREIGN KEY (`UserID`) REFERENCES `Users` (`UserID`) ON DELETE CASCADE,
   CONSTRAINT `userroles_ibfk_2` FOREIGN KEY (`RoleID`) REFERENCES `Roles` (`RoleID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -346,7 +346,7 @@ CREATE TABLE `UserRoles` (
 
 LOCK TABLES `UserRoles` WRITE;
 /*!40000 ALTER TABLE `UserRoles` DISABLE KEYS */;
-INSERT INTO `UserRoles` VALUES (1,1,1,'2025-06-04 17:17:52','2025-06-04 17:17:52'),(2,2,3,'2025-06-04 17:49:18','2025-06-04 17:49:18'),(3,3,1,'2025-06-07 10:04:15','2025-06-07 10:04:15'),(4,4,1,'2025-06-07 10:07:59','2025-06-07 10:07:59'),(5,5,2,'2025-06-07 10:48:56','2025-06-07 10:48:56');
+INSERT INTO `UserRoles` VALUES (1,1,1,'2025-06-04 17:17:52','2025-06-04 17:17:52'),(2,2,3,'2025-06-04 17:49:18','2025-06-04 17:49:18'),(3,3,1,'2025-06-07 10:04:15','2025-06-07 10:04:15'),(4,4,1,'2025-06-07 10:07:59','2025-06-07 10:07:59'),(5,5,2,'2025-06-07 10:48:56','2025-06-07 10:48:56'),(6,6,1,'2025-06-07 12:01:38','2025-06-07 12:01:38');
 /*!40000 ALTER TABLE `UserRoles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -365,7 +365,7 @@ CREATE TABLE `Users` (
   `UpdatedAt` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`UserID`),
   UNIQUE KEY `Email` (`Email`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -374,7 +374,7 @@ CREATE TABLE `Users` (
 
 LOCK TABLES `Users` WRITE;
 /*!40000 ALTER TABLE `Users` DISABLE KEYS */;
-INSERT INTO `Users` VALUES (1,'taskpay@example.com','$2b$10$WtQO2Qg48IbM.Zvw9CBq/.eRsuhUgYSHUYn1RvnXUC5iAXl/g3FM6','2025-06-04 17:17:52','2025-06-04 17:17:52'),(2,'admin_taskpay@example.com','$2b$10$cj6kfTPZgdH2DMNJd03tu.l6XJuBLFTGPE9Ab9kqAa.Dc3HtvP9xu','2025-06-04 17:49:18','2025-06-04 17:49:18'),(3,'andrei@taskpay.com','$2b$10$kJWgBm8wFL8UvG7FdqVk2u2Tw9Z2qoqfO44Al7.kV6YLtv7cJI4q6','2025-06-07 10:04:15','2025-06-07 10:04:15'),(4,'andrei1@taskpay.com','$2b$10$Xe9VqFH5hAqZ2BO24jauw.GKr/EYj/8rfMK4/s5JQmPs0WYj5QKvC','2025-06-07 10:07:59','2025-06-07 10:07:59'),(5,'andrei2@taskpay.com','$2b$10$ISONjqSh.PJB.jp4UIjhpeO3mF5ZmlblzTjre1PXDeLwWm1HcdAa.','2025-06-07 10:48:55','2025-06-07 10:48:55');
+INSERT INTO `Users` VALUES (1,'taskpay@example.com','$2b$10$WtQO2Qg48IbM.Zvw9CBq/.eRsuhUgYSHUYn1RvnXUC5iAXl/g3FM6','2025-06-04 17:17:52','2025-06-04 17:17:52'),(2,'admin_taskpay@example.com','$2b$10$cj6kfTPZgdH2DMNJd03tu.l6XJuBLFTGPE9Ab9kqAa.Dc3HtvP9xu','2025-06-04 17:49:18','2025-06-04 17:49:18'),(3,'andrei@taskpay.com','$2b$10$kJWgBm8wFL8UvG7FdqVk2u2Tw9Z2qoqfO44Al7.kV6YLtv7cJI4q6','2025-06-07 10:04:15','2025-06-07 10:04:15'),(4,'andrei1@taskpay.com','$2b$10$Xe9VqFH5hAqZ2BO24jauw.GKr/EYj/8rfMK4/s5JQmPs0WYj5QKvC','2025-06-07 10:07:59','2025-06-07 10:07:59'),(5,'andrei2@taskpay.com','$2b$10$ISONjqSh.PJB.jp4UIjhpeO3mF5ZmlblzTjre1PXDeLwWm1HcdAa.','2025-06-07 10:48:55','2025-06-07 10:48:55'),(6,'dummytest@taskpay.com','$2b$10$O2kqMSCoZ5cuch5Rvw.OgO0b4edh8bZ5A9FoBNb5GwJBAoqqEUqRi','2025-06-07 12:01:38','2025-06-07 12:01:38');
 /*!40000 ALTER TABLE `Users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -424,4 +424,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-06-07 19:57:14
+-- Dump completed on 2025-06-07 22:59:13

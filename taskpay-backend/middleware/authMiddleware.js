@@ -1,14 +1,18 @@
+/**
+ * @file authMiddleware.js
+ * @description Middleware for authentication (verifying JWT) and authorization (checking roles).
+ *
+ * @modification
+ * Added the 'authorizeClient' middleware function to check if the authenticated user
+ * possesses the 'client' role. This will be used to protect client-specific endpoints.
+ */
+
 const jwt = require('jsonwebtoken');
-const { User } = require('../models'); // Updated import
-// Ensure .env is loaded. The path should be relative to this middleware file.
+const { User, Role } = require('../models'); // Updated to use centralized model imports
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
-/**
- * Middleware to protect routes.
- * Verifies JWT token from Authorization header.
- * If token is valid, attaches user object (excluding password) to req.user.
- * If token is invalid or not present, sends 401 Unauthorized.
- */
+
+// 'protect' middleware remains the same, it verifies the token and attaches the user
 const protect = async (req, res, next) => {
     let token;
 
@@ -32,12 +36,6 @@ const protect = async (req, res, next) => {
             next();
         } catch (error) {
             console.error('Token verification error:', error.message);
-            if (error.name === 'JsonWebTokenError') {
-                return res.status(401).json({ message: 'Not authorized, token is invalid.' });
-            }
-            if (error.name === 'TokenExpiredError') {
-                return res.status(401).json({ message: 'Not authorized, token has expired.' });
-            }
             return res.status(401).json({ message: 'Not authorized, token failed verification.' });
         }
     }
@@ -47,15 +45,11 @@ const protect = async (req, res, next) => {
     }
 };
 
-/**
- * Middleware to authorize admin users.
- * Should be used AFTER the 'protect' middleware.
- */
-const authorizeAdmin = async (req, res, next) => { // Made async as it might involve DB lookup
+// 'authorizeAdmin' middleware remains the same
+const authorizeAdmin = async (req, res, next) => {
     if (req.user) {
         try {
-            // Assuming user.getRoles() is available due to User.belongsToMany(Role, { as: 'Roles' })
-            const roles = await req.user.getRoles(); // Get roles for the authenticated user
+            const roles = await req.user.getRoles();
             const isAdmin = roles.some(role => role.RoleName === 'admin');
 
             if (isAdmin) {
@@ -68,9 +62,37 @@ const authorizeAdmin = async (req, res, next) => { // Made async as it might inv
             res.status(500).json({ message: "Server error during admin authorization." });
         }
     } else {
-        // This case should ideally be caught by 'protect' middleware first
         res.status(401).json({ message: 'Not authorized, user not identified.' });
     }
 };
 
-module.exports = { protect, authorizeAdmin };
+/**
+ * @function authorizeClient
+ * @description Middleware to authorize client users.
+ * Should be used AFTER the 'protect' middleware.
+ */
+const authorizeClient = async (req, res, next) => {
+    if (req.user) {
+        try {
+            // Get all roles associated with the authenticated user
+            const roles = await req.user.getRoles();
+            // Check if one of the roles is 'client'
+            const isClient = roles.some(role => role.RoleName === 'client');
+
+            if (isClient) {
+                next(); // User has the client role, proceed
+            } else {
+                res.status(403).json({ message: 'Forbidden: Not authorized as a client.' });
+            }
+        } catch (error) {
+            console.error("Client authorization error:", error);
+            res.status(500).json({ message: "Server error during client authorization." });
+        }
+    } else {
+        // This case should be caught by 'protect' middleware first
+        res.status(401).json({ message: 'Not authorized, user not identified.' });
+    }
+};
+
+
+module.exports = { protect, authorizeAdmin, authorizeClient };

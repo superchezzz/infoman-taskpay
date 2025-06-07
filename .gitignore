@@ -39,3 +39,6 @@ backend/build/
 
 # Uploaded files
 /taskpay-backend/uploads/
+
+# Ignore .sql files in the taskpay-backend directory
+taskpay-backend/*.sql

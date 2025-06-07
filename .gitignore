@@ -36,3 +36,6 @@ taskpay-frontend/build/
 # Backend specific build/dist folders (if applicable)
 backend/dist/
 backend/build/
+
+# Uploaded files
+/taskpay-backend/uploads/

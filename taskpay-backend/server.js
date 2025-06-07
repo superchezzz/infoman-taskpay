@@ -1,7 +1,6 @@
 /**
  * @file server.js
  * @description Main entry point for the TaskPay backend Express server.
- * @date 2025-06-07
  *
  * @description
  * This file initializes the Express application, connects to the database,
@@ -9,16 +8,15 @@
  * and starts the server.
  *
  * @modification
- * Updated the CORS whitelist to include `http://localhost:5173`.
- * This allows the local frontend development server to make API requests to this
- * local backend, resolving the "Not allowed by CORS" error during local testing.
+ * Added and mounted the new 'fileUploadRoutes' to handle file uploads,
+ * such as applicant resumes.
  */
 
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors'); // Import the cors package
+const cors = require('cors');
 const { connectDB } = require('./config/database');
-const db = require('./models'); // This loads all models and sets up associations
+const db = require('./models');
 
 // Route imports
 const authRoutes = require('./routes/authRoutes');
@@ -26,6 +24,7 @@ const applicantProfileRoutes = require('./routes/applicantProfileRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const fileUploadRoutes = require('./routes/fileUploadRoutes'); // <-- 1. IMPORT the new routes for file uploads
 
 // Middleware imports
 const { protect } = require('./middleware/authMiddleware');
@@ -77,6 +76,7 @@ app.use('/api/profile', protect, applicantProfileRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/applications', protect, applicationRoutes);
+app.use('/api/uploads', protect, fileUploadRoutes); // <-- 2. MOUNT the new upload routes (protected)
 
 // --- Centralized Error Handling ---
 app.use((err, req, res, next) => {

@@ -12,6 +12,10 @@
     height: 90px;
     margin: 40px auto 0 auto;
     border-radius: 10px;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding-right: 30px;
 }
 
 .applicant-taskpay-title{
@@ -20,6 +24,25 @@
 }
 .applicant-taskpay-title span{
     color: #fec400;
+}
+
+.applicant-dashboard-name-img-container{
+    gap: 15px;
+    align-items: center;
+}
+
+.applicant-profile-initials {
+    background-color: #fec400;
+    color: #333;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 16px;
+    flex-shrink: 0;
 }
 
 .application-dashboard-text{
@@ -61,8 +84,12 @@
     width: 362px;
     height: 360px;
     margin-left: auto;
-    margin-right: auto
+    margin-right: auto;
+    padding-top: 15px;
+    display: flex;
+    flex-direction: column;
 }
+
 .id-container{
     display: flex;
     align-items: center;
@@ -73,15 +100,67 @@
     color: white;
     border-radius: 20px;
     text-align: center;
-
+    margin-left: auto;
+    margin-right: auto; 
+    font-size: 12px;
+    padding: 10px;
 }
+
+.my-profile-info{
+    padding: 10px;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.profile-row {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding-right:10px ;
+}
+
+.profile-value {
+    text-align: right;
+    flex-grow: 1;
+    white-space: normal;
+    word-break: break-word; 
+}
+
+.edit-profile-container{
+    background-color: #FEC400;
+    color: white;
+    width: 100px;
+    height: 35px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center ;
+    text-align: center;
+    margin-left: 10px;
+    margin-top:20px;
+    font-size: 12px;
+}
+.edit-profile-container:hover{
+    background-color: #f8b200fe;
+}
+.edit-profile-text{
+    margin-left: auto;
+    margin-right: auto; 
+}
+
 .my-task-application-container{
     background-color: #f8f8ff;
     width: 810px;
     height: 570px;
-    padding: 20px;
+    padding: 30px;
     overflow-y: auto;
     max-height: 600px;
+    padding-top: 35px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border-radius: 10px;
 } 
 
 

@@ -1,0 +1,363 @@
+/* taskpay-frontend/src/styles/ApplicantEditProfile.css */
+
+.applicant-edit-profile-container {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.profile-header h1 {
+  font-size: 24px;
+  color: #333;
+}
+
+.profile-header button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.profile-section {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  overflow: hidden; /* For collapsing */
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #f7f7f7;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.section-header h2 {
+  font-size: 18px;
+  color: #555;
+  margin: 0;
+}
+
+.section-header span {
+  font-size: 14px;
+  color: #777;
+}
+
+.section-header .arrow {
+  font-size: 16px;
+  color: #888;
+}
+
+/* Form layout for sub-components */
+.personal-info-form-content,
+.educational-background-form-content,
+.work-experience-form-content,
+.certifications-form-content,
+.preferred-occupations-form-content,
+.resume-upload-content {
+  padding: 20px; /* Add padding for content inside the section */
+}
+
+.form-row {
+  display: flex;
+  gap: 20px; /* Space between columns */
+  margin-bottom: 15px;
+}
+
+.form-group {
+  margin-bottom: 15px; /* For individual fields not in a row */
+  flex: 1; /* Allows half-width to properly size */
+}
+
+.form-group.half-width {
+  flex: 1; /* Occupy half the available space */
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #444;
+  font-size: 14px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+  width: calc(100% - 22px); /* Account for padding and border */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+textarea {
+  resize: vertical; /* Allow vertical resizing for textareas */
+}
+
+.save-continue-button,
+.add-another-button {
+  background-color: #fdd835; /* Yellowish color from screenshots */
+  color: #333;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.save-continue-button:hover,
+.add-another-button:hover {
+  background-color: #fbc02d; /* Slightly darker yellow on hover */
+}
+
+.edit-profile-button {
+  display: block;
+  width: 100%;
+  margin-top: 30px;
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #fdd835; /* Yellowish color */
+  color: #333;
+  padding: 15px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.edit-profile-button:hover {
+  background-color: #fbc02d;
+}
+
+/* Specific styles for repeated entries (Education, Work Exp, Certs) */
+.education-entry-card,
+.work-experience-entry-card,
+.certification-entry-card {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #fcfcfc;
+}
+
+.education-entry-card h3,
+.work-experience-entry-card h3,
+.certification-entry-card h3 {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #666;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 10px;
+}
+
+.new-entry-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px dashed #ddd;
+}
+
+.new-entry-section h3 {
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #444;
+}
+
+/* Resume Upload Styles */
+.resume-upload-box {
+  border: 2px dashed #ccc;
+  padding: 40px;
+  text-align: center;
+  margin-top: 20px;
+  border-radius: 8px;
+  color: #888;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.resume-upload-box:hover {
+  border-color: #fdd835;
+  background-color: #fffbeb;
+}
+
+.resume-upload-box input[type="file"] {
+  display: none;
+}
+
+.upload-icon-placeholder {
+  font-size: 50px;
+  color: #ccc;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.browse-files-button {
+  background-color: #eee;
+  color: #555;
+  border: 1px solid #ddd;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.browse-files-button:hover {
+  background-color: #e0e0e0;
+}
+
+.uploaded-file-info {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #e6ffe6;
+  border: 1px solid #b3ffb3;
+  border-radius: 5px;
+  color: #333;
+}
+
+/* Preferred Occupations Tags */
+.tags-container {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tags-container input[type="text"] {
+  flex-grow: 1;
+  border: none;
+  padding: 5px 0;
+  min-width: 100px; /* Allow some room to type */
+}
+
+.tags-container input[type="text"]:focus {
+  outline: none;
+}
+
+.tag {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #555;
+}
+
+.tag button {
+  background: none;
+  border: none;
+  color: #888;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+.tag button:hover {
+  color: #333;
+}
+
+/* Profile Preview Styles */
+.profile-preview-container {
+  padding: 0 20px; /* Consistent padding with form content */
+}
+
+.section-header-preview {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.section-header-preview h3 {
+  font-size: 20px;
+  color: #333;
+  margin: 0;
+}
+
+.preview-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px 20px; /* Row gap, Column gap */
+    margin-bottom: 20px;
+}
+
+.preview-details-grid p {
+    margin: 0;
+}
+
+.preview-details-grid .grid-span-2 {
+    grid-column: span 2; /* Make this item span two columns */
+}
+
+.education-entry-preview,
+.work-experience-entry-preview,
+.certification-entry-preview {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #eee;
+}
+
+.education-entry-preview:last-child,
+.work-experience-entry-preview:last-child,
+.certification-entry-preview:last-child {
+    border-bottom: none;
+}
+
+.preview-section p {
+    margin-bottom: 8px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.resume-filename {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.view-resume-button {
+    background-color: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.view-resume-button:hover {
+    background-color: #0056b3;
+}

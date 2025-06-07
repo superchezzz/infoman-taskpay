@@ -1,7 +1,24 @@
+/**
+ * @file server.js
+ * @description Main entry point for the TaskPay backend Express server.
+ * @author andreistvn
+ * @date 2025-06-07
+ *
+ * @description
+ * This file initializes the Express application, connects to the database,
+ * sets up core middleware (including CORS for cross-origin requests),
+ * mounts all API route handlers, and starts the server.
+ *
+ * @modification
+ * Added the 'cors' middleware to allow requests from our deployed frontend on Vercel.
+ * This is crucial for the frontend and backend to communicate when they are on different domains.
+ */
+
 require('dotenv').config();
 const express = require('express');
-const { connectDB } = require('./config/database'); // connectDB just authenticates
-const db = require('./models'); // This loads all models and sets up associations via models/index.js
+const cors = require('cors'); // 1. Import the cors package
+const { connectDB } = require('./config/database');
+const db = require('./models');
 
 // Route imports
 const authRoutes = require('./routes/authRoutes');
@@ -11,36 +28,61 @@ const taskRoutes = require('./routes/taskRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 
 // Middleware imports
-const { protect } = require('./middleware/authMiddleware'); // This will also need to import User from db
+const { protect } = require('./middleware/authMiddleware');
 
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Connect to Database
+// --- Connect to Database ---
 connectDB();
-// Optional: Sync database (useful in dev, use migrations in prod)
-// db.sequelize.sync({ alter: true }).then(() => console.log('Database synced.'));
+
+// --- Core Middleware ---
+
+// 2. Enable CORS
+// This must be one of the first pieces of middleware.
+// It adds the necessary headers to allow our Vercel frontend to make API requests.
+app.use(cors({
+    origin: 'https://taskpay-ten.vercel.app' // Allow requests only from our deployed frontend
+    // For development, if you were running the frontend locally, you might use:
+    // origin: ['https://taskpay-ten.vercel.app', 'http://localhost:5173'] // To allow both
+}));
 
 
-// ... (rest of server.js remains largely the same) ...
-// Just ensure all route files now import models from `db` (i.e., `require('../models')`)
+app.use(express.json()); // To parse JSON request bodies
+app.use(express.urlencoded({ extended: false })); // To parse URL-encoded bodies
 
-// Core Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// --- API Routes ---
 
-// API Routes
-app.get('/', (req, res) => res.send('TaskPay API Welcome'));
-app.get('/api', (req, res) => res.send('TaskPay API Backend'));
+// Root and basic API info endpoint
+app.get('/', (req, res) => {
+    res.send('Welcome to the TaskPay API! Awaiting requests...');
+});
+
+// Mount auth routes
 app.use('/api/auth', authRoutes);
-app.use('/api/profile', protect, applicantProfileRoutes); // protect will need updated User model import
-app.use('/api/admin', adminRoutes); // adminRoutes will need updated model imports
-app.use('/api/tasks', taskRoutes); // taskRoutes will need updated model imports
-app.use('/api/applications', protect, applicationRoutes); // applicationRoutes will need updated model imports
 
-// Centralized Error Handling
-app.use((err, req, res, next) => { /* ... */ });
+// Mount applicant profile routes (protected for authenticated users)
+app.use('/api/profile', protect, applicantProfileRoutes);
 
+// Mount admin routes
+app.use('/api/admin', adminRoutes);
+
+// Mount task routes
+app.use('/api/tasks', taskRoutes);
+
+// Mount application routes (these are specific to a user's actions, so protect them)
+app.use('/api/applications', protect, applicationRoutes);
+
+// --- Centralized Error Handling ---
+app.use((err, req, res, next) => {
+    console.error("Unhandled Error:", err.stack || err);
+    const statusCode = err.status || 500;
+    res.status(statusCode).json({
+        message: err.message || 'An unexpected error occurred.',
+    });
+});
+
+// --- Start the Server ---
 app.listen(port, () => {
     console.log(`Backend server listening on http://localhost:${port}`);
 });

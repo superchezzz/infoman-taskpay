@@ -1,6 +1,6 @@
 // taskpay-frontend/src/components/AvailableTaskItem.jsx
 import React from 'react';
-import { getClientInitials } from "../utils/formatName.js";
+import { getClientInitials } from "../../utils/formatName.js";
 
 function AvailableTaskItem({ task, onView, onApply }) {
   // Helper to format dates nicely, handles null dates

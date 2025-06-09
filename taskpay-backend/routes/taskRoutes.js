@@ -165,14 +165,25 @@ router.get('/available', async (req, res) => {
     try {
         const { count, rows: tasks } = await Task.findAndCountAll({
             where: { TaskStatus: 'Open' },
+            attributes: {
+                include: [
+                    [
+                        Sequelize.literal(`(
+                            SELECT COUNT(*)
+                            FROM TaskApplications AS ta
+                            WHERE
+                                ta.Task_ID = Task.TaskID AND
+                                ta.Status IN ('Pending', 'ViewedByAdmin', 'Shortlisted', 'Approved', 'InProgress', 'SubmittedForReview')
+                        )`),
+                        'applicantCount'
+                    ]
+                ]
+            },
             limit,
             offset,
             order: [['PostedDate', 'DESC']]
         });
 
-        if (!tasks || tasks.length === 0) {
-            return res.status(404).json({ message: 'No available tasks found.' });
-        }
         res.status(200).json({
             totalTasks: count,
             totalPages: Math.ceil(count / limit),

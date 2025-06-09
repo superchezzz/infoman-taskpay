@@ -1,13 +1,13 @@
-// taskpay-frontend/src/components/EducationalBackgroundForm.jsx
 import React, { useState } from 'react';
 
-const EducationalBackgroundForm = ({ educationalBackground, onInputChange, onAddEducation, onSaveAndContinue }) => {
+const EducationalBackgroundForm = ({ educationalBackground, onInputChange, onAddEducation, onRemoveEducation, onSaveAndContinue }) => {
+  // Local state for the "Add New" form, now using backend field names
   const [newEducation, setNewEducation] = useState({
-    educationalAttainment: '',
-    institution: '',
-    course: '',
-    graduationYear: '',
-    award: '',
+    Educational_Attainment: '',
+    Institution: '',
+    Course: '',
+    Graduation_Year: '',
+    Award: '',
   });
 
   const handleNewEducationChange = (field, value) => {
@@ -15,132 +15,129 @@ const EducationalBackgroundForm = ({ educationalBackground, onInputChange, onAdd
   };
 
   const handleAddEducationClick = () => {
-    if (newEducation.educationalAttainment && newEducation.institution && newEducation.graduationYear) {
+    // Basic validation
+    if (newEducation.Educational_Attainment && newEducation.Institution && newEducation.Graduation_Year) {
       onAddEducation(newEducation);
-      setNewEducation({ // Reset form fields
-        educationalAttainment: '',
-        institution: '',
-        course: '',
-        graduationYear: '',
-        award: '',
+      // Reset form fields
+      setNewEducation({
+        Educational_Attainment: '',
+        Institution: '',
+        Course: '',
+        Graduation_Year: '',
+        Award: '',
       });
     } else {
-      alert('Please fill in required fields for education: Attainment, Institution, and Graduation Year.');
+      alert('Please fill in required fields: Attainment, Institution, and Graduation Year.');
     }
   };
 
   return (
     <div className="educational-background-form-content">
-      {educationalBackground.map((edu, index) => (
+      {/* This maps over the existing education entries from the database */}
+      {educationalBackground && educationalBackground.map((edu, index) => (
         <div key={index} className="education-entry-card">
-          <h3>Education Entry #{index + 1}</h3>
+          <div className="entry-header">
+            <h3>Education Entry #{index + 1}</h3>
+            {/* ADDED: Remove button for existing entries */}
+            <button onClick={() => onRemoveEducation(index)} className="remove-button">Remove</button>
+          </div>
           <div className="form-group">
-            <label htmlFor={`eduAttainment-${index}`}>Educational Attainment</label>
+            <label>Educational Attainment</label>
             <input
               type="text"
-              id={`eduAttainment-${index}`}
-              value={edu.educationalAttainment}
-              onChange={(e) => onInputChange(index, 'educationalAttainment', e.target.value)}
-              placeholder="Select degree"
+              value={edu.Educational_Attainment || ''}
+              onChange={(e) => onInputChange(index, 'Educational_Attainment', e.target.value)}
+              placeholder="e.g., Bachelor's Degree"
             />
           </div>
           <div className="form-group">
-            <label htmlFor={`institution-${index}`}>Institution</label>
+            <label>Institution</label>
             <input
               type="text"
-              id={`institution-${index}`}
-              value={edu.institution}
-              onChange={(e) => onInputChange(index, 'institution', e.target.value)}
-              placeholder="Enter institution"
+              value={edu.Institution || ''}
+              onChange={(e) => onInputChange(index, 'Institution', e.target.value)}
+              placeholder="e.g., University of the Philippines"
             />
           </div>
           <div className="form-group">
-            <label htmlFor={`course-${index}`}>Course</label>
+            <label>Course</label>
             <input
               type="text"
-              id={`course-${index}`}
-              value={edu.course}
-              onChange={(e) => onInputChange(index, 'course', e.target.value)}
-              placeholder="Name of course"
+              value={edu.Course || ''}
+              onChange={(e) => onInputChange(index, 'Course', e.target.value)}
+              placeholder="e.g., BS in Computer Science"
             />
           </div>
           <div className="form-group">
-            <label htmlFor={`gradYear-${index}`}>Graduation Year</label>
+            <label>Graduation Year</label>
             <input
               type="text"
-              id={`gradYear-${index}`}
-              value={edu.graduationYear}
-              onChange={(e) => onInputChange(index, 'graduationYear', e.target.value)}
+              value={edu.Graduation_Year || ''}
+              onChange={(e) => onInputChange(index, 'Graduation_Year', e.target.value)}
               placeholder="YYYY"
             />
           </div>
           <div className="form-group">
-            <label htmlFor={`award-${index}`}>Award</label>
+            <label>Award</label>
             <input
               type="text"
-              id={`award-${index}`}
-              value={edu.award}
-              onChange={(e) => onInputChange(index, 'award', e.target.value)}
-              placeholder="Add other award"
+              value={edu.Award || ''}
+              onChange={(e) => onInputChange(index, 'Award', e.target.value)}
+              placeholder="e.g., Cum Laude (Optional)"
             />
           </div>
-          {/* You might want a "Remove" button here for existing entries */}
         </div>
       ))}
 
       <div className="new-entry-section">
         <h3>Add New Educational Background</h3>
         <div className="form-group">
-          <label htmlFor="newEducationalAttainment">Educational Attainment</label>
+          <label>Educational Attainment</label>
           <input
             type="text"
-            id="newEducationalAttainment"
-            value={newEducation.educationalAttainment}
-            onChange={(e) => handleNewEducationChange('educationalAttainment', e.target.value)}
+            value={newEducation.Educational_Attainment}
+            onChange={(e) => handleNewEducationChange('Educational_Attainment', e.target.value)}
             placeholder="Select degree"
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="newInstitution">Institution</label>
+        {/* ... other input fields for new entry ... */}
+         <div className="form-group">
+          <label>Institution</label>
           <input
             type="text"
-            id="newInstitution"
-            value={newEducation.institution}
-            onChange={(e) => handleNewEducationChange('institution', e.target.value)}
+            value={newEducation.Institution}
+            onChange={(e) => handleNewEducationChange('Institution', e.target.value)}
             placeholder="Enter institution"
           />
         </div>
         <div className="form-group">
-          <label htmlFor="newCourse">Course</label>
+          <label>Course</label>
           <input
             type="text"
-            id="newCourse"
-            value={newEducation.course}
-            onChange={(e) => handleNewEducationChange('course', e.target.value)}
+            value={newEducation.Course}
+            onChange={(e) => handleNewEducationChange('Course', e.target.value)}
             placeholder="Name of course"
           />
         </div>
         <div className="form-group">
-          <label htmlFor="newGraduationYear">Graduation Year</label>
+          <label>Graduation Year</label>
           <input
             type="text"
-            id="newGraduationYear"
-            value={newEducation.graduationYear}
-            onChange={(e) => handleNewEducationChange('graduationYear', e.target.value)}
+            value={newEducation.Graduation_Year}
+            onChange={(e) => handleNewEducationChange('Graduation_Year', e.target.value)}
             placeholder="YYYY"
           />
         </div>
         <div className="form-group">
-          <label htmlFor="newAward">Award</label>
+          <label>Award</label>
           <input
             type="text"
-            id="newAward"
-            value={newEducation.award}
-            onChange={(e) => handleNewEducationChange('award', e.target.value)}
+            value={newEducation.Award}
+            onChange={(e) => handleNewEducationChange('Award', e.target.value)}
             placeholder="Add other award"
           />
         </div>
-        <button onClick={handleAddEducationClick} className="add-another-button">Add another award</button>
+        <button onClick={handleAddEducationClick} className="add-another-button">Add Education</button>
       </div>
 
       <button onClick={onSaveAndContinue} className="save-continue-button">Save & Continue</button>

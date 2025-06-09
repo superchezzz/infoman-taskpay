@@ -1,106 +1,108 @@
-// taskpay-frontend/src/components/PreferredOccupationsForm.jsx
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 
-const PreferredOccupationsForm = ({
-  preferredOccupations,
-  onInputChange,
-  onAddJobCategory,
-  onRemoveJobCategory,
-  onAddPreferredLocation,
-  onRemovePreferredLocation,
-  onSaveAndContinue
-}) => {
+const PreferredOccupationsForm = ({ preferences, onPreferenceChange, onSaveAndContinue }) => {
   const [newJobCategory, setNewJobCategory] = useState('');
   const [newPreferredLocation, setNewPreferredLocation] = useState('');
 
-  const handleJobCategoryAdd = () => {
-    if (newJobCategory && !preferredOccupations.jobCategories.includes(newJobCategory)) {
-      onAddJobCategory(newJobCategory);
+  // Use useMemo to safely parse the categories and locations once
+  const jobCategories = useMemo(() => {
+    // Assumes categories are stored as a comma-separated string in the database
+    if (preferences?.Pref_Job_Categories) {
+      return preferences.Pref_Job_Categories.split(',').filter(c => c);
+    }
+    return [];
+  }, [preferences]);
+
+  const preferredLocations = useMemo(() => {
+    if (preferences?.Pref_Locations) {
+      return preferences.Pref_Locations.split(',').filter(l => l);
+    }
+    return [];
+  }, [preferences]);
+
+
+  const handleAddTag = (type) => {
+    if (type === 'category' && newJobCategory && !jobCategories.includes(newJobCategory)) {
+      const newArray = [...jobCategories, newJobCategory];
+      onPreferenceChange('Pref_Job_Categories', newArray.join(','));
       setNewJobCategory('');
+    } else if (type === 'location' && newPreferredLocation && !preferredLocations.includes(newPreferredLocation)) {
+      const newArray = [...preferredLocations, newPreferredLocation];
+      onPreferenceChange('Pref_Locations', newArray.join(','));
+      setNewPreferredLocation('');
     }
   };
 
-  const handleLocationAdd = () => {
-    if (newPreferredLocation && !preferredOccupations.preferredLocations.includes(newPreferredLocation)) {
-      onAddPreferredLocation(newPreferredLocation);
-      setNewPreferredLocation('');
+  const handleRemoveTag = (type, tagToRemove) => {
+    if (type === 'category') {
+      const newArray = jobCategories.filter(tag => tag !== tagToRemove);
+      onPreferenceChange('Pref_Job_Categories', newArray.join(','));
+    } else if (type === 'location') {
+      const newArray = preferredLocations.filter(tag => tag !== tagToRemove);
+      onPreferenceChange('Pref_Locations', newArray.join(','));
     }
   };
 
   return (
     <div className="preferred-occupations-form-content">
       <div className="form-group">
-        <label htmlFor="jobCategories">Job Categories</label>
+        <label>Job Categories</label>
         <div className="tags-container">
-          {preferredOccupations.jobCategories.map((category, index) => (
+          {jobCategories.map((category, index) => (
             <span key={index} className="tag">
               {category}
-              <button type="button" onClick={() => onRemoveJobCategory(category)}>X</button>
+              <button type="button" onClick={() => handleRemoveTag('category', category)}>X</button>
             </span>
           ))}
           <input
             type="text"
-            id="jobCategories"
             value={newJobCategory}
             onChange={(e) => setNewJobCategory(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault(); // Prevent form submission
-                handleJobCategoryAdd();
-              }
-            }}
-            placeholder="Select job category or type to add"
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag('category'))}
+            placeholder="Type and press Enter or Add"
           />
-          <button type="button" onClick={handleJobCategoryAdd}>Add</button>
+          <button type="button" onClick={() => handleAddTag('category')}>Add</button>
         </div>
       </div>
 
       <div className="form-row">
         <div className="form-group half-width">
-          <label htmlFor="expectedSalaryMin">Expected salary range (Minimum)</label>
+          <label>Expected salary range (Minimum)</label>
           <input
             type="number"
-            id="expectedSalaryMin"
-            value={preferredOccupations.expectedSalaryRange.min}
-            onChange={(e) => onInputChange('expectedSalaryRange', { ...preferredOccupations.expectedSalaryRange, min: e.target.value })}
+            value={preferences?.Expected_Salary_Min || ''}
+            onChange={(e) => onPreferenceChange('Expected_Salary_Min', e.target.value)}
             placeholder="Minimum"
           />
         </div>
         <div className="form-group half-width">
-          <label htmlFor="expectedSalaryMax">Expected salary range (Maximum)</label>
+          <label>Expected salary range (Maximum)</label>
           <input
             type="number"
-            id="expectedSalaryMax"
-            value={preferredOccupations.expectedSalaryRange.max}
-            onChange={(e) => onInputChange('expectedSalaryRange', { ...preferredOccupations.expectedSalaryRange, max: e.target.value })}
+            value={preferences?.Expected_Salary_Max || ''}
+            onChange={(e) => onPreferenceChange('Expected_Salary_Max', e.target.value)}
             placeholder="Maximum"
           />
         </div>
       </div>
 
       <div className="form-group">
-        <label htmlFor="preferredLocations">Preferred Locations</label>
+        <label>Preferred Locations</label>
         <div className="tags-container">
-          {preferredOccupations.preferredLocations.map((location, index) => (
+          {preferredLocations.map((location, index) => (
             <span key={index} className="tag">
               {location}
-              <button type="button" onClick={() => onRemovePreferredLocation(location)}>X</button>
+              <button type="button" onClick={() => handleRemoveTag('location', location)}>X</button>
             </span>
           ))}
           <input
             type="text"
-            id="preferredLocations"
             value={newPreferredLocation}
             onChange={(e) => setNewPreferredLocation(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault(); // Prevent form submission
-                handleLocationAdd();
-              }
-            }}
-            placeholder="Enter place or regions"
+            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag('location'))}
+            placeholder="Type and press Enter or Add"
           />
-          <button type="button" onClick={handleLocationAdd}>Add</button>
+          <button type="button" onClick={() => handleAddTag('location')}>Add</button>
         </div>
       </div>
 

@@ -31,7 +31,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(255),
             allowNull: true
         },
-        Exp_Salary: {
+        Exp_Salary_Min: {
+            type: DataTypes.DECIMAL(12, 2),
+            allowNull: true
+        },
+        Exp_Salary_Max: {
             type: DataTypes.DECIMAL(12, 2),
             allowNull: true
         }

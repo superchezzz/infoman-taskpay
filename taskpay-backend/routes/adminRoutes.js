@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorizeAdmin } = require('../middleware/authMiddleware');
 
+// Placeholder for db to access Role model in include if not destructured directly
+const db = require('../models');
+
 // Import models from the central db object
 const {
     User,
@@ -64,8 +67,5 @@ router.get('/applicants', protect, authorizeAdmin, async (req, res) => {
         res.status(500).json({ message: 'Server error while fetching applicants.', error: error.message });
     }
 });
-
-// Placeholder for db to access Role model in include if not destructured directly
-const db = require('../models');
 
 module.exports = router;

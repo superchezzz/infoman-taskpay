@@ -67,14 +67,12 @@ const findTaskAndVerifyClient = async (taskId, clientId) => {
 router.post('/tasks/:taskId/apply', protect, async (req, res) => {
     const { taskId } = req.params;
     const applicantId = req.user.UserID;
-    const { CoverLetter, ApplicantProposedBudget } = req.body;
 
     try {
         const task = await Task.findByPk(taskId);
         if (!task) return res.status(404).json({ message: 'Task not found.' });
         if (task.TaskStatus !== 'Open') return res.status(400).json({ message: 'This task is no longer open for applications.' });
 
-        // Verify the user making the request has the 'applicant' role
         const userMakingApplication = await User.findByPk(applicantId, {
             include: { model: Role, as: 'Roles' }
         });
@@ -87,13 +85,13 @@ router.post('/tasks/:taskId/apply', protect, async (req, res) => {
         });
         if (existingApplication) return res.status(400).json({ message: 'You have already applied for this task.' });
 
+        // Create the application without the extra fields
         const newApplication = await TaskApplication.create({
             Applicant_ID: applicantId,
             Task_ID: parseInt(taskId, 10),
-            CoverLetter,
-            ApplicantProposedBudget,
             Status: 'Pending'
         });
+
         res.status(201).json({ message: 'Successfully applied for the task.', application: newApplication });
     } catch (error) {
         console.error('Apply for Task Error:', error);
@@ -197,19 +195,47 @@ router.post('/:applicationId/approve', protect, authorizeClient, async (req, res
 router.post('/:applicationId/withdraw', protect, async (req, res) => {
     const { applicationId } = req.params;
     const applicantId = req.user.UserID;
+
+    // Use a transaction to ensure data integrity
+    const t = await sequelize.transaction();
+
     try {
         const { error, status, application } = await findApplicationAndVerifyApplicant(applicationId, applicantId);
-        if (error) return res.status(status).json({ message: error });
 
-        if (!['Pending', 'Approved'].includes(application.Status)) {
-            return res.status(400).json({ message: `Cannot withdraw application with status: ${application.Status}` });
+        if (error) {
+            await t.rollback();
+            return res.status(status).json({ message: error });
         }
+
+        const originalStatus = application.Status;
+
+        if (!['Pending', 'Approved'].includes(originalStatus)) {
+            await t.rollback();
+            return res.status(400).json({ message: `Cannot withdraw application with status: ${originalStatus}` });
+        }
+
+        // Update the application status
         application.Status = 'Withdrawn';
-        await application.save();
+        await application.save({ transaction: t });
+
+        // If the applicant was already approved, we need to re-open the task.
+        if (originalStatus === 'Approved') {
+            await Task.update(
+                { TaskStatus: 'Open' },
+                { where: { TaskID: application.Task_ID }, transaction: t }
+            );
+        }
+
+        // If everything is successful, commit the transaction
+        await t.commit();
+        
         res.status(200).json({ message: 'Application successfully withdrawn.', application });
+
     } catch (error) {
+        // If any step fails, roll back all changes
+        await t.rollback();
         console.error('Withdraw Application Error:', error);
-        res.status(500).json({ message: 'Server error.', error: error.message });
+        res.status(500).json({ message: 'Server error during withdrawal.', error: error.message });
     }
 });
 
@@ -255,6 +281,68 @@ router.post('/:applicationId/complete', protect, async (req, res) => {
     } catch (error) {
         console.error('Complete Task Error:', error);
         res.status(500).json({ message: 'Server error.', error: error.message });
+    }
+});
+
+// @route   GET /api/applications/history
+// @desc    Get the logged-in applicant's task history (non-active applications) with pagination
+// @access  Private (Applicant only)
+router.get('/history', protect, async (req, res) => {
+    const applicantId = req.user.UserID;
+    const page = parseInt(req.query.page, 10) || 1; // Get page from query, default 1
+    const limit = parseInt(req.query.limit, 10) || 5; // Get limit from query, default 5 (or 10, match frontend)
+    const offset = (page - 1) * limit;
+
+    try {
+        const { count, rows: historyApplications } = await TaskApplication.findAndCountAll({
+            where: {
+                Applicant_ID: applicantId,
+                Status: {
+                    // Include all non-active statuses in history
+                    [Op.in]: ['Completed', 'Withdrawn', 'Rejected', 'Cancelled']
+                }
+            },
+            include: [{
+                model: Task,
+                as: 'TaskDetails',
+                attributes: [
+                    'TaskID',
+                    'Title',
+                    'Description',
+                    'Budget',
+                    'Deadline',
+                    'PostedDate',
+                    'Duration',
+                    'ClientName',
+                    'Category',
+                    'Location',
+                    // This subquery counts the number of ACTIVE applications for the task
+                    [Sequelize.literal(`(
+                        SELECT COUNT(*)
+                        FROM TaskApplications AS ta
+                        WHERE
+                            ta.Task_ID = \`TaskDetails\`.\`TaskID\` AND
+                            ta.Status IN ('Pending', 'ViewedByAdmin', 'Shortlisted', 'Approved', 'InProgress', 'SubmittedForReview')
+                    )`), 'applicantCount']
+                ]
+            }],
+            limit,    // Apply limit for pagination
+            offset,   // Apply offset for pagination
+            order: [['ApplicationDate', 'DESC']]
+        });
+
+        const totalPages = Math.ceil(count / limit);
+
+        res.status(200).json({
+            history: historyApplications || [],
+            totalApplications: count, // Total count of history applications
+            totalPages: totalPages,   // Total pages for history
+            currentPage: page         // Current page number
+        });
+
+    } catch (error) {
+        console.error('Get Task History Error:', error);
+        res.status(500).json({ message: 'Server error while fetching task history.', error: error.message });
     }
 });
 

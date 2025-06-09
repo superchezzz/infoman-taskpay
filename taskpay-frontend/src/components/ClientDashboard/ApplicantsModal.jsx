@@ -1,10 +1,10 @@
 import React, { useCallback } from 'react';
-import '../../styles/ApplicantsModal.css'; // Path relative to components/
+import '../../styles/ApplicantsModal.css'; // Path relative to components/ClientDashboard/
+// import axios from 'axios'; // Import axios if any action in modal directly calls API
 
 function ApplicantsModal({ task, onClose, onHire, onViewApplicantInfo }) {
     if (!task) return null;
 
-    // Helper to get initials for applicant cards
     const getInitials = useCallback((name = '') => {
         const parts = name.split(' ');
         if (parts.length > 1) {
@@ -14,6 +14,17 @@ function ApplicantsModal({ task, onClose, onHire, onViewApplicantInfo }) {
         }
         return 'US';
     }, []);
+
+    // Example of a function that *might* be moved here if it's more complex than a simple prop call
+    // For "Hire" and "View", it's better to pass handlers from parent (ClientDashboard.jsx)
+    // const handleViewResume = (resumeUrl) => {
+    //     // You might open a new tab directly
+    //     if (resumeUrl) {
+    //         window.open(resumeUrl, '_blank');
+    //     } else {
+    //         alert('Resume not available.');
+    //     }
+    // };
 
     return (
         <div className="modal-overlay">

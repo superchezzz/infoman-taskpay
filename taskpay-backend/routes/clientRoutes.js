@@ -88,7 +88,13 @@ router.get('/my-tasks', protect, authorizeClient, async (req, res) => {
             where: whereClause,
             attributes: {
                 include: [[
-                    Sequelize.literal(`(SELECT COUNT(*) FROM TaskApplications AS ta WHERE ta.Task_ID = Task.TaskID)`),
+                    Sequelize.literal(`(
+                        SELECT COUNT(*)
+                        FROM TaskApplications AS ta
+                        WHERE
+                            ta.Task_ID = Task.TaskID AND
+                            ta.Status IN ('Pending', 'ViewedByAdmin', 'Shortlisted', 'Approved', 'InProgress', 'SubmittedForReview')
+                    )`),
                     'applicantCount'
                 ]]
             },

@@ -1,13 +1,13 @@
-// taskpay-frontend/src/components/CertificationsForm.jsx
 import React, { useState } from 'react';
 
-const CertificationsForm = ({ certifications, onInputChange, onAddCertification, onSaveAndContinue }) => {
+const CertificationsForm = ({ certifications, onInputChange, onAddCertification, onRemoveCertification, onSaveAndContinue }) => {
+  // Local state for the "Add New" form, using backend field names
   const [newCertificate, setNewCertificate] = useState({
-    certificateName: '',
-    issuingOrganization: '',
-    startDate: '',
-    endDate: '', // Can be empty if no expiration
-    trainingDuration: '',
+    Certification_Name: '',
+    Issuing_Organization: '',
+    Start_Date: '',
+    End_Date: '',
+    Training_Duration: '',
   });
 
   const handleNewCertificateChange = (field, value) => {
@@ -15,136 +15,123 @@ const CertificationsForm = ({ certifications, onInputChange, onAddCertification,
   };
 
   const handleAddCertificateClick = () => {
-    if (newCertificate.certificateName && newCertificate.issuingOrganization && newCertificate.startDate) {
+    if (newCertificate.Certification_Name && newCertificate.Issuing_Organization && newCertificate.Start_Date) {
       onAddCertification(newCertificate);
-      setNewCertificate({ // Reset form fields
-        certificateName: '',
-        issuingOrganization: '',
-        startDate: '',
-        endDate: '',
-        trainingDuration: '',
+      // Reset form fields
+      setNewCertificate({
+        Certification_Name: '',
+        Issuing_Organization: '',
+        Start_Date: '',
+        End_Date: '',
+        Training_Duration: '',
       });
     } else {
-      alert('Please fill in required fields for certification: Name, Issuing Organization, and Start Date.');
+      alert('Please fill in required fields: Name, Issuing Organization, and Start Date.');
     }
   };
 
   return (
     <div className="certifications-form-content">
-      {certifications.map((cert, index) => (
+      {certifications && certifications.map((cert, index) => (
         <div key={index} className="certification-entry-card">
-          <h3>Certification #{index + 1}</h3>
+          <div className="entry-header">
+            <h3>Certification #{index + 1}</h3>
+            <button onClick={() => onRemoveCertification(index)} className="remove-button">Remove</button>
+          </div>
           <div className="form-group">
-            <label htmlFor={`certName-${index}`}>Certificate name</label>
+            <label>Certificate name</label>
             <input
               type="text"
-              id={`certName-${index}`}
-              value={cert.certificateName}
-              onChange={(e) => onInputChange(index, 'certificateName', e.target.value)}
+              value={cert.Certification_Name || ''}
+              onChange={(e) => onInputChange(index, 'Certification_Name', e.target.value)}
               placeholder="Certificate title"
             />
           </div>
           <div className="form-group">
-            <label htmlFor={`issuingOrg-${index}`}>Issuing organization</label>
+            <label>Issuing organization</label>
             <input
               type="text"
-              id={`issuingOrg-${index}`}
-              value={cert.issuingOrganization}
-              onChange={(e) => onInputChange(index, 'issuingOrganization', e.target.value)}
+              value={cert.Issuing_Organization || ''}
+              onChange={(e) => onInputChange(index, 'Issuing_Organization', e.target.value)}
               placeholder="Organization name"
             />
           </div>
           <div className="form-row">
             <div className="form-group half-width">
-              <label htmlFor={`certStartDate-${index}`}>Start date</label>
+              <label>Start date</label>
               <input
                 type="date"
-                id={`certStartDate-${index}`}
-                value={cert.startDate}
-                onChange={(e) => onInputChange(index, 'startDate', e.target.value)}
-                placeholder="DD/MM/YYYY"
+                value={cert.Start_Date ? cert.Start_Date.split('T')[0] : ''}
+                onChange={(e) => onInputChange(index, 'Start_Date', e.target.value)}
               />
             </div>
             <div className="form-group half-width">
-              <label htmlFor={`certEndDate-${index}`}>End date</label>
+              <label>End date (if applicable)</label>
               <input
                 type="date"
-                id={`certEndDate-${index}`}
-                value={cert.endDate}
-                onChange={(e) => onInputChange(index, 'endDate', e.target.value)}
-                placeholder="DD/MM/YYYY"
+                value={cert.End_Date ? cert.End_Date.split('T')[0] : ''}
+                onChange={(e) => onInputChange(index, 'End_Date', e.target.value)}
               />
             </div>
           </div>
           <div className="form-group">
-            <label htmlFor={`trainingDuration-${index}`}>Training duration</label>
+            <label>Training duration</label>
             <input
               type="text"
-              id={`trainingDuration-${index}`}
-              value={cert.trainingDuration}
-              onChange={(e) => onInputChange(index, 'trainingDuration', e.target.value)}
-              placeholder="Enter your training duration"
+              value={cert.Training_Duration || ''}
+              onChange={(e) => onInputChange(index, 'Training_Duration', e.target.value)}
+              placeholder="e.g., 40 hours, 3 months"
             />
           </div>
-          {/* You might want a "Remove" button here for existing entries */}
         </div>
       ))}
 
       <div className="new-entry-section">
         <h3>Add New Certification</h3>
+        {/* Form for adding a new certificate */}
         <div className="form-group">
-          <label htmlFor="newCertificateName">Certificate name</label>
-          <input
-            type="text"
-            id="newCertificateName"
-            value={newCertificate.certificateName}
-            onChange={(e) => handleNewCertificateChange('certificateName', e.target.value)}
-            placeholder="Certificate title"
-          />
+            <label>Certificate name</label>
+            <input
+                type="text"
+                value={newCertificate.Certification_Name}
+                onChange={(e) => handleNewCertificateChange('Certification_Name', e.target.value)}
+            />
         </div>
         <div className="form-group">
-          <label htmlFor="newIssuingOrganization">Issuing organization</label>
-          <input
-            type="text"
-            id="newIssuingOrganization"
-            value={newCertificate.issuingOrganization}
-            onChange={(e) => handleNewCertificateChange('issuingOrganization', e.target.value)}
-            placeholder="Organization name"
-          />
+            <label>Issuing organization</label>
+            <input
+                type="text"
+                value={newCertificate.Issuing_Organization}
+                onChange={(e) => handleNewCertificateChange('Issuing_Organization', e.target.value)}
+            />
         </div>
         <div className="form-row">
-          <div className="form-group half-width">
-            <label htmlFor="newCertStartDate">Start date</label>
-            <input
-              type="date"
-              id="newCertStartDate"
-              value={newCertificate.startDate}
-              onChange={(e) => handleNewCertificateChange('startDate', e.target.value)}
-              placeholder="DD/MM/YYYY"
-            />
-          </div>
-          <div className="form-group half-width">
-            <label htmlFor="newCertEndDate">End date</label>
-            <input
-              type="date"
-              id="newCertEndDate"
-              value={newCertificate.endDate}
-              onChange={(e) => handleNewCertificateChange('endDate', e.target.value)}
-              placeholder="DD/MM/YYYY"
-            />
-          </div>
+            <div className="form-group half-width">
+                <label>Start date</label>
+                <input
+                type="date"
+                value={newCertificate.Start_Date}
+                onChange={(e) => handleNewCertificateChange('Start_Date', e.target.value)}
+                />
+            </div>
+            <div className="form-group half-width">
+                <label>End date</label>
+                <input
+                type="date"
+                value={newCertificate.End_Date}
+                onChange={(e) => handleNewCertificateChange('End_Date', e.target.value)}
+                />
+            </div>
         </div>
         <div className="form-group">
-          <label htmlFor="newTrainingDuration">Training duration</label>
-          <input
-            type="text"
-            id="newTrainingDuration"
-            value={newCertificate.trainingDuration}
-            onChange={(e) => handleNewCertificateChange('trainingDuration', e.target.value)}
-            placeholder="Enter your training duration"
-          />
+            <label>Training duration</label>
+            <input
+                type="text"
+                value={newCertificate.Training_Duration}
+                onChange={(e) => handleNewCertificateChange('Training_Duration', e.target.value)}
+            />
         </div>
-        <button onClick={handleAddCertificateClick} className="add-another-button">Add another Certification</button>
+        <button onClick={handleAddCertificateClick} className="add-another-button">Add Certification</button>
       </div>
 
       <button onClick={onSaveAndContinue} className="save-continue-button">Save & Continue</button>

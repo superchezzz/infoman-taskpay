@@ -25,10 +25,12 @@ import AvailableTaskItem from '../components/AvailableTaskItem.jsx';
 import TaskHistoryItem from '../components/TaskHistoryItem.jsx';
 import DocumentsForm from '../components/DocumentsForm.jsx';
 import '../styles/Modal.css';
+import { getClientInitials } from "../utils/formatName.js";
 
 function ApplicantDashboard() {
     const [applicantProfile, setApplicantProfile] = useState(null);
     const [taskApplications, setTaskApplications] = useState([]);
+    const [submissionStatus, setSubmissionStatus] = useState({ message: '', isError: false });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -43,25 +45,70 @@ function ApplicantDashboard() {
     // State to hold the task being viewed in the detail modal
     const [currentViewedTask, setCurrentViewedTask] = useState(null);
 
-    // Mock Data for Modals (*** REPLACE WITH REAL API CALLS ***)
-    // You'll fetch these from your backend when the corresponding endpoints are ready.
-    const [availableTasks, setAvailableTasks] = useState([
-        { id: 'av-task-1', title: 'Logo Design for Startup', description: 'Need a creative logo design for our new tech startup. Modern, clean, and professional look required.', budget: 5000, dueDate: 'July 17, 2025', client: 'Maria Santos', location: 'Manila', category: 'Graphic Design', posted: 'June 1, 2025', duration: '1 month', applicants: 5 },
-        { id: 'av-task-2', title: 'Data Entry Specialist', description: 'Seeking a detail-oriented individual for data entry. Remote position, flexible hours. Accuracy is key.', budget: 7000, dueDate: 'July 25, 2025', client: 'Alpha Solutions', location: 'Remote', category: 'Data Entry', posted: 'June 10, 2025', duration: '2 weeks', applicants: 15 },
-        { id: 'av-task-3', title: 'Social Media Manager', description: 'Manage social media presence and content for a growing online business. Experience with various platforms required.', budget: 10000, dueDate: 'August 10, 2025', client: 'Digital Connect', location: 'Cebu', category: 'Marketing', posted: 'June 15, 2025', duration: '3 months', applicants: 8 },
-    ]);
+    // State for Available Tasks pagination
+    const [availableTasks, setAvailableTasks] = useState([]);
+    const [availableTasksCurrentPage, setAvailableTasksCurrentPage] = useState(1);
+    const [availableTasksTotalPages, setAvailableTasksTotalPages] = useState(1);
+    // eslint-disable-next-line no-unused-vars
+    const [availableTasksLimit, setAvailableTasksLimit] = useState(10); // Define items per page, e.g., 5
 
-    const [mockTaskHistory, setMockTaskHistory] = useState([
-        { id: 'hist-task-1', title: 'Logo Design for Startup', description: 'Created a modern logo for a tech startup, ensuring brand consistency and visual appeal.', budget: 5000, completedDate: 'July 17, 2025', client: 'Maria Santos', location: 'Manila', category: 'Graphic Design', status: 'Completed', posted: 'April 1, 2025', deadline: 'July 17, 2025', duration: '3 months', applicants: 10 },
-        { id: 'hist-task-2', title: 'Mobile App UI Design', description: 'Designed intuitive user interfaces for a new e-commerce mobile application, focusing on user experience.', budget: 7000, completedDate: 'June 30, 2025', client: 'XYZ Innov', location: 'Cebu', category: 'UI/UX Design', status: 'Completed', posted: 'March 1, 2025', deadline: 'June 30, 2025', duration: '4 months', applicants: 8 },
-    ]);
+    // State for Task History pagination (future implementation, but set up variables)
+    const [taskHistory, setTaskHistory] = useState([]);
+    const [taskHistoryCurrentPage, setTaskHistoryCurrentPage] = useState(1);
+    const [taskHistoryTotalPages, setTaskHistoryTotalPages] = useState(1);
+    // eslint-disable-next-line no-unused-vars
+    const [taskHistoryLimit, setTaskHistoryLimit] = useState(10); // Define items per page, e.g., 5
 
-    const [documents, setDocuments] = useState({
-        tinNumber: '123-456-789-000',
-        sssNumber: '12-3456789-0',
-        philhealthNumber: '12-345678901-2'
-    });
-    // End Mock Data
+    const [documents, setDocuments] = useState(null);
+
+    // Function to fetch available tasks with pagination
+    const fetchAvailableTasks = async (pageToFetch = 1) => {
+        try {
+            const authToken = localStorage.getItem('authToken');
+            const api = axios.create({
+                baseURL: 'http://localhost:3001/api', 
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            // CORRECTED LINE: Removed the HTML tags and backslashes
+            const response = await api.get(`/tasks/available?page=${pageToFetch}&limit=${availableTasksLimit}`);
+
+            setAvailableTasks(response.data.tasks || []);
+            setAvailableTasksCurrentPage(response.data.currentPage);
+            setAvailableTasksTotalPages(response.data.totalPages);
+
+        } catch (error) {
+            console.error("Error fetching available tasks:", error);
+            alert("Could not load available tasks. Please try again.");
+            setAvailableTasks([]);
+            setAvailableTasksCurrentPage(1);
+            setAvailableTasksTotalPages(1);
+        }
+    };
+
+    // Function to fetch task history with pagination
+    const fetchTaskHistory = async (pageToFetch = 1) => {
+        try {
+            const authToken = localStorage.getItem('authToken');
+            const api = axios.create({
+                baseURL: 'http://localhost:3001/api', // Make sure this is 'http://localhost:3001/api'
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+
+            const response = await api.get(`/applications/history?page=${pageToFetch}&limit=${taskHistoryLimit}`);
+
+            setTaskHistory(response.data.history || []);
+            setTaskHistoryCurrentPage(response.data.currentPage);
+            setTaskHistoryTotalPages(response.data.totalPages);
+
+        } catch (error) {
+            console.error("Error fetching task history:", error);
+            alert("Could not load task history. Please try again.");
+            setTaskHistory([]);
+            setTaskHistoryCurrentPage(1);
+            setTaskHistoryTotalPages(1);
+        }
+    };
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -82,34 +129,17 @@ function ApplicantDashboard() {
             });
 
             try {
-                const results = await Promise.allSettled([
-                    api.get('/profile/form'),
-                    api.get('/applications/my')
-                    // Add more API calls here for available tasks, task history, documents, etc.
-                    // e.g., api.get('/tasks/available'), api.get('/applications/history'), api.get('/documents/my')
-                ]);
+                // We make ONE API call to our new, efficient endpoint.
+                const response = await api.get('/profile/dashboard');
 
-                if (results[0].status === 'fulfilled') {
-                    setApplicantProfile(results[0].value.data);
-                } else {
-                    console.error("Critical Error: Failed to fetch profile data:", results[0].reason.response?.data);
-                    throw new Error(results[0].reason.response?.data?.message || "Could not load your profile. Please try logging in again.");
-                }
-
-                if (results[1].status === 'fulfilled') {
-                    setTaskApplications(results[1].value.data.applications || []);
-                } else {
-                    if (results[1].reason.response?.status === 404) {
-                        console.log('No task applications found for this user.');
-                        setTaskApplications([]);
-                    } else {
-                        console.warn("Could not fetch task applications:", results[1].reason.response?.data);
-                        setTaskApplications([]);
-                    }
-                }
+                // The response.data object contains both profile and applications.
+                setApplicantProfile(response.data.profile);
+                setTaskApplications(response.data.applications || []);
 
             } catch (err) {
-                setError(err.message);
+                console.error("Error fetching dashboard data:", err);
+                const errorMessage = err.response?.data?.message || "Could not load your dashboard. Please try logging in again.";
+                setError(errorMessage);
             } finally {
                 setIsLoading(false);
             }
@@ -141,101 +171,144 @@ function ApplicantDashboard() {
     };
 
     // Handler to open the generic task detail modal, closing others if needed
-    const handleViewAnyTaskDetail = (task) => {
-        setCurrentViewedTask(task);
-        // Close other potential modals before opening the detail modal
-        setIsApplyForNewTaskModalOpen(false);
-        setIsTaskHistoryModalOpen(false);
-        setIsMyDocumentsModalOpen(false); // Ensure this is also closed if it was somehow open
+    const handleViewAnyTaskDetail = (item) => {
+        // This line smartly finds the task data, whether it's
+        // a direct task object (from 'available') or nested inside an application object (from 'history').
+        const taskData = item.TaskDetails || item;
+    
+        const formattedTaskForModal = {
+            id: item.ApplicationID || taskData.TaskID,
+            title: taskData.Title,
+            description: taskData.Description,
+            budget: taskData.Budget,
+            posted: taskData.PostedDate ? new Date(taskData.PostedDate).toLocaleDateString() : 'N/A',
+            deadline: taskData.Deadline ? new Date(taskData.Deadline).toLocaleDateString() : 'N/A',
+            duration: taskData.Duration,
+            applicants: taskData.applicantCount !== undefined ? taskData.applicantCount : 'N/A',
+            client: taskData.ClientName,
+            category: taskData.Category,
+            location: taskData.Location, // Added location
+            status: item.Status, // The application status is on the top-level item
+        };
+        
+        setCurrentViewedTask(formattedTaskForModal);
         setIsMyTaskDetailModalOpen(true);
     };
 
-    const handleApplyForNewTaskClick = () => {
+    const handleApplyForNewTaskClick = async () => {
+        await fetchAvailableTasks(1); // Fetch the first page when opening the modal
         setIsApplyForNewTaskModalOpen(true);
     };
 
     const handleApplyTask = async (task) => {
-        console.log(`Applying for task: ${task.title}. (Simulating API call...)`);
         try {
             const authToken = localStorage.getItem('authToken');
             const api = axios.create({
                 baseURL: 'http://localhost:3001/api',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-            // Replace with your actual API call to apply for a task
-            // await api.post('/applications/apply', { taskId: task.id });
-            alert(`Successfully applied for ${task.title}!`);
-            setIsApplyForNewTaskModalOpen(false); // Close the available tasks modal
-            // Optionally, re-fetch task applications to update "My Task Application"
+
+            await api.post(`/applications/tasks/${task.TaskID}/apply`);
+
+            // On success, set a success message
+            setSubmissionStatus({ message: `Successfully applied for ${task.Title}!`, isError: false });
+
+            // Close the modal automatically after 2 seconds
+            setTimeout(() => {
+                setIsApplyForNewTaskModalOpen(false);
+            }, 2000);
+
         } catch (apiError) {
             console.error("Error applying for task:", apiError);
-            alert(`Failed to apply for ${task.title}. Please try again.`);
+            // On error, set an error message
+            const errorMessage = apiError.response?.data?.message || 'An unexpected error occurred.';
+            setSubmissionStatus({ message: `Failed to apply: ${errorMessage}`, isError: true });
         }
     };
 
-    const handleViewTaskHistoryClick = () => {
+    const handleViewTaskHistoryClick = async () => {
+        await fetchTaskHistory(1); // Fetch the first page of history
         setIsTaskHistoryModalOpen(true);
     };
 
-    const handleMyDocumentsClick = () => {
-        setIsMyDocumentsModalOpen(true);
-    };
-
-    const handleUpdateDocuments = async (updatedDocs) => {
-        console.log('Updating documents...', updatedDocs);
+    const handleMyDocumentsClick = async () => {
         try {
             const authToken = localStorage.getItem('authToken');
             const api = axios.create({
                 baseURL: 'http://localhost:3001/api',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-            // Replace with your actual API call to update documents
-            // await api.put('/profile/documents', updatedDocs);
-            setDocuments(updatedDocs); // Optimistically update UI state
+    
+            const response = await api.get('/profile/documents');
+    
+            // Set the state with the user's real data from the database
+            setDocuments(response.data);
+    
+            // Now open the modal
+            setIsMyDocumentsModalOpen(true);
+    
+        } catch (error) {
+            console.error("Error fetching documents:", error);
+            // If there's an error, we can open the form with empty values
+            setDocuments({ tinNumber: '', sssNumber: '', philhealthNumber: '' });
+            setIsMyDocumentsModalOpen(true);
+        }
+    };
+
+    const handleUpdateDocuments = async (updatedDocs) => {
+        try {
+            const authToken = localStorage.getItem('authToken');
+            const api = axios.create({
+                baseURL: 'http://localhost:3001/api',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
+    
+            // Calling the new endpoint we just created
+            await api.put('/profile/documents', updatedDocs);
+    
+            setDocuments(updatedDocs); // Update the local state
             alert('Documents updated successfully!');
             setIsMyDocumentsModalOpen(false);
         } catch (apiError) {
             console.error("Error updating documents:", apiError);
-            alert('Failed to update documents. Please try again.');
+            alert(`Failed to update documents. ${apiError.response?.data?.message || ''}`);
         }
     };
 
     const handleStartTask = async (task) => {
-        console.log(`Starting task: ${task.title}. (Simulating API call to update status)`);
         try {
             const authToken = localStorage.getItem('authToken');
             const api = axios.create({
                 baseURL: 'http://localhost:3001/api',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-            // Replace with your actual API call to start the task
-            // await api.put(`/applications/${task.id}/start`);
+            // Calling the correct endpoint to start a task
+            await api.post(`/applications/${task.id}/start`);
             alert(`Task '${task.title}' has been started!`);
             setIsMyTaskDetailModalOpen(false);
-            // Optionally, re-fetch task applications to update "My Task Application" status
+            // You might want to refresh the dashboard data here later
         } catch (apiError) {
             console.error("Error starting task:", apiError);
-            alert(`Failed to start task '${task.title}'.`);
+            alert(`Failed to start task '${task.title}'. ${apiError.response?.data?.message || ''}`);
         }
     };
 
     const handleWithdrawTask = async (task) => {
         if (window.confirm(`Are you sure you want to withdraw from ${task.title}?`)) {
-            console.log(`Withdrawing from task: ${task.title}. (Simulating API call to withdraw application)`);
             try {
                 const authToken = localStorage.getItem('authToken');
                 const api = axios.create({
                     baseURL: 'http://localhost:3001/api',
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                // Replace with your actual API call to withdraw application
-                // await api.delete(`/applications/${task.id}/withdraw`);
+                // Calling the correct endpoint to withdraw an application
+                await api.post(`/applications/${task.id}/withdraw`);
                 alert(`Successfully withdrew from '${task.title}'.`);
                 setIsMyTaskDetailModalOpen(false);
-                // Optionally, re-fetch task applications to remove it from "My Task Application"
+                // You might want to refresh the dashboard data here later
             } catch (apiError) {
                 console.error("Error withdrawing from task:", apiError);
-                alert(`Failed to withdraw from task '${task.title}'.`);
+                alert(`Failed to withdraw from task '${task.title}'. ${apiError.response?.data?.message || ''}`);
             }
         }
     };
@@ -391,42 +464,63 @@ function ApplicantDashboard() {
                 isOpen={isMyTaskDetailModalOpen}
                 onClose={handleCloseModal(setIsMyTaskDetailModalOpen)}
                 title={currentViewedTask?.title || 'Task Details'}
-                zIndex={1002} // Higher z-index to appear on top of other modals
+                zIndex={1002}
+                headerClassName="task-detail-modal-title"
             >
                 {currentViewedTask && (
                     <div className="task-detail-modal">
-                        <p>Client: {currentViewedTask.client}</p>
-                        <p>Posted: {currentViewedTask.posted || 'N/A'}</p>
-                        <p>Deadline: {currentViewedTask.deadline || 'N/A'}</p>
-                        <p>Category: {currentViewedTask.category || 'N/A'}</p>
-
-                        <div className="task-stats">
-                            <span>P{currentViewedTask.budget} Budget</span>
-                            <span>{currentViewedTask.duration} Duration</span>
-                            <span>{currentViewedTask.applicants} Applicants</span>
+                        {/* HEADER DETAILS (matching Figma) */}
+                        <div className="detail-header-info">
+                            <div className="detail-client-info">
+                                Client: <span className="client-initials">{getClientInitials(currentViewedTask.client)}</span>
+                                <span className="client-name-full">{currentViewedTask.client}</span>
+                            </div>
+                            <div className="detail-meta-row">
+                                <span className="detail-meta-item"><i className="icon-posted-date"></i> Posted: {currentViewedTask.posted || 'N/A'}</span>
+                                <span className="detail-meta-item"><i className="icon-deadline-date"></i> Deadline: {currentViewedTask.deadline || 'N/A'}</span>
+                                <span className="detail-meta-item"><i className="icon-category-detail"></i> {currentViewedTask.category || 'N/A'}</span>
+                            </div>
                         </div>
 
-                        <h4>Task Description</h4>
-                        <p>{currentViewedTask.description}</p>
+                        {/* STATS SECTION (matching Figma) */}
+                        <div className="detail-task-stats-grid">
+                            <div className="stat-box">
+                                {/* REMOVED: <i className="icon-budget-detail"></i> */}
+                                <span>P{currentViewedTask.budget}</span>
+                                <span className="stat-label">Budget</span>
+                            </div>
+                            <div className="stat-box">
+                                {/* REMOVED: <i className="icon-duration-detail"></i> */}
+                                <span>{currentViewedTask.duration || 'N/A'}</span>
+                                <span className="stat-label">Duration</span>
+                            </div>
+                            <div className="stat-box">
+                                {/* REMOVED: <i className="icon-applicants-detail"></i> */}
+                                <span>{currentViewedTask.applicants}</span>
+                                <span className="stat-label">Applicants</span>
+                            </div>
+                        </div>
 
-                        {/* Conditional buttons based on task context and status */}
-                        {/* If it's a task from "My Task Application" that is 'Pending' */}
-                        {taskApplications.some(app => app.ApplicationID === currentViewedTask.id) && currentViewedTask.status === 'Pending' && (
+                        {/* TASK DESCRIPTION */}
+                        <h4 className="task-description-header"><i className="icon-description-detail"></i> Task Description</h4>
+                        <p className="task-description-text">{currentViewedTask.description}</p>
+
+                        {/* Conditional buttons remain the same, as their logic is already there */}
+                        {taskApplications.some(app => app.ApplicationID === currentViewedTask.id) && currentViewedTask.status === 'Approved' && ( /* Only show Start/Withdraw if Approved */
                             <div className="modal-actions">
                                 <button className="start-task-button" onClick={() => handleStartTask(currentViewedTask)}>Start Task</button>
                                 <button className="withdraw-button" onClick={() => handleWithdrawTask(currentViewedTask)}>Withdraw</button>
                             </div>
                         )}
-                        {/* If it's an available task (not yet applied for) */}
-                        {availableTasks.some(task => task.id === currentViewedTask.id) && (
+                        {availableTasks.some(task => task.TaskID === currentViewedTask.id) && ( /* TaskID for available tasks */
                             <div className="modal-actions">
                                 <button className="apply-button" onClick={() => handleApplyTask(currentViewedTask)}>Apply</button>
                             </div>
                         )}
-                        {/* If it's a task history item, typically no action buttons */}
-                        {mockTaskHistory.some(task => task.id === currentViewedTask.id) && (
+                        {/* History items (Rejected, Withdrawn, Completed) usually don't have active buttons */}
+                        {taskHistory.some(historyItem => historyItem.ApplicationID === currentViewedTask.id) && (
                             <div className="modal-actions">
-                                {/* Add history specific actions if needed, e.g., "View Report" */}
+                                {/* No action buttons for historical items in Figma, but you can add if needed */}
                             </div>
                         )}
                     </div>
@@ -436,27 +530,60 @@ function ApplicantDashboard() {
             {/* Apply for New Task Modal */}
             <Modal
                 isOpen={isApplyForNewTaskModalOpen}
-                onClose={handleCloseModal(setIsApplyForNewTaskModalOpen)}
+                onClose={() => {
+                    setIsApplyForNewTaskModalOpen(false);
+                    setSubmissionStatus({ message: '', isError: false }); // This resets the message
+                }}
                 title="Available Tasks"
-                zIndex={1001} // Standard z-index for first-level modals
-            >
-                <div className="available-tasks-list">
-                    {availableTasks.map(task => (
+                zIndex={1001} 
+>
+            {/* CHANGE #2: Add this block to display the message */}
+            {submissionStatus.message && (
+                <div className={submissionStatus.isError ? 'status-message error' : 'status-message success'}>
+                    {submissionStatus.message}
+                </div>
+            )}
+
+            <div className="available-tasks-list">
+                {availableTasks.length > 0 ? (
+                    availableTasks.map(task => (
                         <AvailableTaskItem
-                            key={task.id}
+                            key={task.TaskID}
                             task={task}
                             onView={handleViewAnyTaskDetail}
                             onApply={handleApplyTask}
                         />
-                    ))}
+                    ))
+                ) : (
+                    <p>There are currently no available tasks.</p>
+                )}
+                {/* We can hide pagination if there are no tasks */}
+                {availableTasksTotalPages > 0 && ( // Only show pagination if there's more than 1 page
                     <div className="pagination">
-                        <button>Previous</button>
-                        <span>1</span>
-                        <span>2</span>
-                        <span>3</span>
-                        <button>Next</button>
+                        <button
+                            onClick={() => fetchAvailableTasks(availableTasksCurrentPage - 1)}
+                            disabled={availableTasksCurrentPage === 1}
+                        >
+                            Previous
+                        </button>
+                        {[...Array(availableTasksTotalPages)].map((_, index) => (
+                            <span
+                                key={index + 1}
+                                className={availableTasksCurrentPage === index + 1 ? 'active' : ''}
+                                onClick={() => fetchAvailableTasks(index + 1)}
+                            >
+                                {index + 1}
+                            </span>
+                        ))}
+                        <button
+                            onClick={() => fetchAvailableTasks(availableTasksCurrentPage + 1)}
+                            disabled={availableTasksCurrentPage === availableTasksTotalPages}
+                        >
+                            Next
+                        </button>
                     </div>
-                </div>
+                )}
+            </div>
             </Modal>
 
             {/* View Task History Modal */}
@@ -467,20 +594,38 @@ function ApplicantDashboard() {
                 zIndex={1001}
             >
                 <div className="task-history-list">
-                    {mockTaskHistory.map(task => (
+                    {taskHistory.map(task => (
                         <TaskHistoryItem
                             key={task.id}
                             task={task}
                             onView={handleViewAnyTaskDetail}
                         />
                     ))}
-                    <div className="pagination">
-                        <button>Previous</button>
-                        <span>1</span>
-                        <span>2</span>
-                        <span>3</span>
-                        <button>Next</button>
-                    </div>
+                    {taskHistoryTotalPages > 0 && ( // Only show pagination if there's more than 1 page
+                        <div className="pagination">
+                            <button
+                                onClick={() => fetchTaskHistory(taskHistoryCurrentPage - 1)}
+                                disabled={taskHistoryCurrentPage === 1}
+                            >
+                                Previous
+                            </button>
+                            {[...Array(taskHistoryTotalPages)].map((_, index) => (
+                                <span
+                                    key={index + 1}
+                                    className={taskHistoryCurrentPage === index + 1 ? 'active' : ''}
+                                    onClick={() => fetchTaskHistory(index + 1)}
+                                >
+                                    {index + 1}
+                                </span>
+                            ))}
+                            <button
+                                onClick={() => fetchTaskHistory(taskHistoryCurrentPage + 1)}
+                                disabled={taskHistoryCurrentPage === taskHistoryTotalPages}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             </Modal>
 
@@ -492,7 +637,7 @@ function ApplicantDashboard() {
                 zIndex={1001}
             >
                 <DocumentsForm
-                    initialData={documents}
+                    initialData={documents || { tinNumber: '', sssNumber: '', philhealthNumber: '' }}
                     onSubmit={handleUpdateDocuments}
                     onCancel={handleCloseModal(setIsMyDocumentsModalOpen)}
                 />

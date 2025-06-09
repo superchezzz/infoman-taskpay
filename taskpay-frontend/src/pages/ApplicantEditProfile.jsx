@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; // Corrected import for useNavigate
-import PersonalInfoForm from '../components/PersonalInfoForm.jsx';
-import EducationalBackgroundForm from '../components/EducationalBackgroundForm.jsx';
-import WorkExperienceForm from '../components/WorkExperienceForm.jsx';
-import CertificationsForm from '../components/CertificationsForm.jsx';
-import PreferredOccupationsForm from '../components/PreferredOccupationsForm.jsx';
-import ResumeUpload from '../components/ResumeUpload.jsx';
-import ProfilePreview from '../components/ProfilePreview.jsx';
+import PersonalInfoForm from '../components/ApplicantEditProfile/PersonalInfoForm.jsx';
+import EducationalBackgroundForm from '../components/ApplicantEditProfile/EducationalBackgroundForm.jsx';
+import WorkExperienceForm from '../components/ApplicantEditProfile/WorkExperienceForm.jsx';
+import CertificationsForm from '../components/ApplicantEditProfile/CertificationsForm.jsx';
+import PreferredOccupationsForm from '../components/ApplicantEditProfile/PreferredOccupationsForm.jsx';
+import ResumeUpload from '../components/ApplicantEditProfile/ResumeUpload.jsx';
+import ProfilePreview from '../components/ApplicantEditProfile/ProfilePreview.jsx';
 import '../styles/ApplicantEditProfile.css';
 
 const ApplicantEditProfile = () => {

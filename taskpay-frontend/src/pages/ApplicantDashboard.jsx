@@ -20,10 +20,10 @@ import { useNavigate } from 'react-router-dom';
 import "../styles/ApplicantDashboard.css";
 import TaskApplicationStatus from '../components/Card/taskApplicationStatus/taskApplicationStatus';
 import { formatName } from "../utils/formatName.js";
-import Modal from '../components/Modal.jsx';
-import AvailableTaskItem from '../components/AvailableTaskItem.jsx';
-import TaskHistoryItem from '../components/TaskHistoryItem.jsx';
-import DocumentsForm from '../components/DocumentsForm.jsx';
+import Modal from '../components/ApplicantDashboardModals/Modal.jsx';
+import AvailableTaskItem from '../components/ApplicantDashboardModals/AvailableTaskItem.jsx';
+import TaskHistoryItem from '../components/ApplicantDashboardModals/TaskHistoryItem.jsx';
+import DocumentsForm from '../components/ApplicantDashboardModals/DocumentsForm.jsx';
 import '../styles/Modal.css';
 import { getClientInitials } from "../utils/formatName.js";
 

@@ -352,30 +352,32 @@ function ApplicantDashboard() {
                                 <h2>ID: APP-2025-{String(applicantProfile.Applicant_ID || '000').padStart(3, '0')}</h2>
                             </div>
                             <div className="my-profile-info">
-                                <div className="profile-row"> <p>Full Name: </p><p className="profile-value">{getFullName(applicantProfile)}</p></div>
-                                <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
-                                </svg>
-                                <div className="profile-row"><p>Sex: </p><p className="profile-value">{applicantProfile.Sex || 'N/A'}</p></div>
-                                <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
-                                </svg>
-                                <div className="profile-row"><p>Civil Status: </p><p className="profile-value"> {applicantProfile.CivilStatus || 'N/A'}</p></div>
-                                <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
-                                </svg>
-                                <div className="profile-row"><p>Date of Birth: </p><p className="profile-value">{applicantProfile.DoB || 'N/A'}</p></div>
-                                <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
-                                </svg>
-                                <div className="profile-row"><p>Address: </p><p className="profile-value">{applicantProfile.Address || 'N/A'}</p></div>
-                                <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
-                                </svg>
-                                <div className="profile-row"><p>Email: </p><p className="profile-value">{applicantProfile.Email || 'N/A'}</p></div>
-                                <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
-                                </svg>
+                                <div className="profile-row">
+                                    <p>Full Name:</p>
+                                    <p className="profile-value">{getFullName(applicantProfile)}</p>
+                                </div>
+                                <div className="profile-row">
+                                    <p>Sex:</p>
+                                    <p className="profile-value">{applicantProfile.Sex || 'N/A'}</p>
+                                </div>
+                                <div className="profile-row">
+                                    <p>Civil Status:</p>
+                                    <p className="profile-value">{applicantProfile.Civil_Status || 'N/A'}</p>
+                                </div>
+                                <div className="profile-row">
+                                    <p>Date of Birth:</p>
+                                    {/* This now formats the date nicely */}
+                                    <p className="profile-value">{applicantProfile.DOB ? new Date(applicantProfile.DOB).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div className="profile-row">
+                                    <p>Address:</p>
+                                    {/* This now combines the address fields into one line */}
+                                    <p className="profile-value">{[applicantProfile.HouseNum_Street, applicantProfile.Brgy, applicantProfile.City, applicantProfile.Province].filter(Boolean).join(', ') || 'N/A'}</p>
+                                </div>
+                                <div className="profile-row">
+                                    <p>Email:</p>
+                                    <p className="profile-value">{applicantProfile.Email || 'N/A'}</p>
+                                </div>
                             </div>
                             <div className="edit-profile-container" onClick={() => navigate("/applicant-edit-profile") }><p className="edit-profile-text">Edit Profile</p></div>
                         </div>

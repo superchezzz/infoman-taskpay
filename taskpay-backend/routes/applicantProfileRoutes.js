@@ -4,62 +4,100 @@ const { protect, authorizeApplicant } = require('../middleware/authMiddleware');
 
 const {
     sequelize, User, Applicant, TaskApplication, Task, Education,
-    WorkExperience, Certification, Preference, CompanyInformation, Attachment,
+    WorkExperience, Certification, Preference, CompanyInformation,
     JobCategory, Location
 } = require('../models');
 
-
-// @route   GET /api/profile/form
-// @desc    Get all existing profile data to populate the edit form
+// @route   GET /api/profile/documents
+// @desc    Get an applicant's document numbers (TIN, SSS, PhilHealth)
 // @access  Private (Applicant only)
-router.get('/form', protect, authorizeApplicant, async (req, res) => {
+router.get('/documents', protect, authorizeApplicant, async (req, res) => {
     try {
         const applicantId = req.user.UserID;
 
-        // --- THIS QUERY IS NOW CORRECTED ---
+        const applicant = await Applicant.findOne({
+            where: { Applicant_ID: applicantId },
+            // Fetch only the specific columns needed for this feature for efficiency
+            attributes: ['TIN_No', 'SSS_No', 'Philhealth_No']
+        });
+
+        if (!applicant) {
+            // If for some reason the applicant profile doesn't exist, send back empty strings
+            return res.status(404).json({
+                tinNumber: '',
+                sssNumber: '',
+                philhealthNumber: ''
+            });
+        }
+
+        // Map the database names (e.g., TIN_No) to the frontend-friendly
+        // camelCase names (e.g., tinNumber) that the DocumentsForm component expects.
+        const formattedDocuments = {
+            tinNumber: applicant.TIN_No || '',
+            sssNumber: applicant.SSS_No || '',
+            philhealthNumber: applicant.Philhealth_No || ''
+        };
+
+        res.status(200).json(formattedDocuments);
+
+    } catch (error) {
+        console.error('Get Documents Error:', error);
+        res.status(500).json({ message: 'Server error while fetching documents.' });
+    }
+});
+
+// @route   PUT /api/profile/documents
+// @desc    Update an applicant's document numbers
+// @access  Private (Applicant only)
+router.put('/documents', protect, authorizeApplicant, async (req, res) => {
+    try {
+        const applicantId = req.user.UserID;
+        const { tinNumber, sssNumber, philhealthNumber } = req.body;
+
+        // Map the frontend camelCase names to the backend database column names
+        const fieldsToUpdate = {
+            TIN_No: tinNumber,
+            SSS_No: sssNumber,
+            Philhealth_No: philhealthNumber
+        };
+
+        // Update the Applicant record in the database
+        await Applicant.update(fieldsToUpdate, {
+            where: { Applicant_ID: applicantId }
+        });
+
+        res.status(200).json({ message: 'Documents updated successfully.' });
+
+    } catch (error) {
+        console.error('Update Documents Error:', error);
+        res.status(500).json({ message: 'Server error while updating documents.' });
+    }
+});
+
+// GET /api/profile/form (This route is correct and remains unchanged)
+router.get('/form', protect, authorizeApplicant, async (req, res) => {
+    try {
+        const applicantId = req.user.UserID;
         const profile = await Applicant.findOne({
             where: { Applicant_ID: applicantId },
             include: [
                 { model: User, as: 'UserAccountDetails', attributes: ['Email'] },
                 { model: Education, as: 'Educations' },
-                {
-                    model: WorkExperience,
-                    as: 'WorkExperiences',
-                    include: [{ model: CompanyInformation, as: 'CompanyDetails' }]
-                },
+                { model: WorkExperience, as: 'WorkExperiences', include: [{ model: CompanyInformation, as: 'CompanyDetails' }] },
                 { model: Certification, as: 'Certifications' },
-                // Preference (for salary) is a direct association
                 { model: Preference, as: 'Preferences' },
-                // JobCategories and Locations are also direct associations with Applicant
-                {
-                    model: JobCategory,
-                    as: 'JobCategories',
-                    through: { attributes: [] } // This hides the join table attributes from the result
-                },
-                {
-                    model: Location,
-                    as: 'Locations',
-                    through: { attributes: [] }
-                }
+                { model: JobCategory, as: 'JobCategories', through: { attributes: [] } },
+                { model: Location, as: 'Locations', through: { attributes: [] } }
             ]
         });
-
         if (!profile) {
             const user = await User.findByPk(applicantId, { attributes: ['Email'] });
             return res.status(200).json({
-                Applicant_ID: applicantId,
-                UserAccountDetails: { Email: user.Email },
-                Educations: [],
-                WorkExperiences: [],
-                Certifications: [],
-                Preferences: null,
-                JobCategories: [],
-                Locations: []
+                Applicant_ID: applicantId, UserAccountDetails: { Email: user.Email }, Educations: [],
+                WorkExperiences: [], Certifications: [], Preferences: null, JobCategories: [], Locations: []
             });
         }
-
         res.status(200).json(profile);
-
     } catch (error) {
         console.error('Get Profile Form Data Error:', error);
         res.status(500).json({ message: 'Server error while fetching profile data.', error: error.message });
@@ -68,27 +106,21 @@ router.get('/form', protect, authorizeApplicant, async (req, res) => {
 
 
 // @route   POST /api/profile/form
-// @desc    Create or Update an applicant's entire profile from the multi-step form
+// @desc    Create or Update an applicant's entire profile
 // @access  Private (Applicant only)
 router.post('/form', protect, authorizeApplicant, async (req, res) => {
     const applicantId = req.user.UserID;
-    const {
-        personalInfo, education, workExperiences, certifications, preferences, deletedIds
-    } = req.body;
+    const { personalInfo, education, workExperiences, certifications, preferences, deletedIds } = req.body;
 
     try {
         await sequelize.transaction(async (t) => {
-            if (personalInfo) {
-                await Applicant.update(personalInfo, { where: { Applicant_ID: applicantId }, transaction: t });
-            }
-            if (deletedIds) {
-                if (deletedIds.education?.length > 0) await Education.destroy({ where: { EducationEntryID: deletedIds.education, Applicant_ID: applicantId }, transaction: t });
-                if (deletedIds.workExperience?.length > 0) await WorkExperience.destroy({ where: { WorkExperienceID: deletedIds.workExperience, Applicant_ID: applicantId }, transaction: t });
-                if (deletedIds.certifications?.length > 0) await Certification.destroy({ where: { CertificationEntryID: deletedIds.certifications, Applicant_ID: applicantId }, transaction: t });
-            }
-            if (education?.length > 0) {
-                await Promise.all(education.map(edu => Education.upsert({ ...edu, Applicant_ID: applicantId }, { transaction: t })));
-            }
+            // These sections are fine
+            if (personalInfo) await Applicant.update(personalInfo, { where: { Applicant_ID: applicantId }, transaction: t });
+            if (deletedIds?.education?.length > 0) await Education.destroy({ where: { EducationEntryID: deletedIds.education, Applicant_ID: applicantId }, transaction: t });
+            if (deletedIds?.workExperience?.length > 0) await WorkExperience.destroy({ where: { WorkExperienceID: deletedIds.workExperience, Applicant_ID: applicantId }, transaction: t });
+            if (deletedIds?.certifications?.length > 0) await Certification.destroy({ where: { CertificationEntryID: deletedIds.certifications, Applicant_ID: applicantId }, transaction: t });
+            if (education?.length > 0) await Promise.all(education.map(edu => Education.upsert({ ...edu, Applicant_ID: applicantId }, { transaction: t })));
+            if (certifications?.length > 0) await Promise.all(certifications.map(cert => Certification.upsert({ ...cert, Applicant_ID: applicantId }, { transaction: t })));
             if (workExperiences?.length > 0) {
                 await Promise.all(workExperiences.map(async (job) => {
                     let companyInfoId = null;
@@ -99,27 +131,36 @@ router.post('/form', protect, authorizeApplicant, async (req, res) => {
                     return WorkExperience.upsert({ ...job, Applicant_ID: applicantId, CompanyInfo_ID: companyInfoId }, { transaction: t });
                 }));
             }
-            if (certifications?.length > 0) {
-                await Promise.all(certifications.map(cert => Certification.upsert({ ...cert, Applicant_ID: applicantId }, { transaction: t })));
-            }
+            
+            // --- THIS IS THE FINAL FIX ---
+            // This block now contains the correct logic to save to the join tables.
             if (preferences) {
-                await Preference.upsert({ Applicant_ID: applicantId, Exp_Salary_Min: preferences.Exp_Salary_Min, Exp_Salary_Max: preferences.Exp_Salary_Max }, { transaction: t });
-                
-                // Note: The frontend might be sending a string of categories/locations. The backend should handle an array.
-                // Assuming frontend sends an array like ["Web Development", "Graphic Design"]
-                if (preferences.jobCategories && Array.isArray(preferences.jobCategories)) {
-                    await sequelize.models.Applicant_JobCategory_Preferences.destroy({ where: { ApplicantID: applicantId }, transaction: t });
-                    await Promise.all(preferences.jobCategories.map(async (catName) => {
-                        const [category] = await JobCategory.findOrCreate({ where: { CategoryName: catName }, transaction: t });
-                        return sequelize.models.Applicant_JobCategory_Preferences.create({ ApplicantID: applicantId, CategoryID: category.CategoryID }, { transaction: t });
-                    }));
+                // First, save the salary info to the main Preference table
+                await Preference.upsert({
+                    Applicant_ID: applicantId,
+                    Exp_Salary_Min: preferences.Exp_Salary_Min,
+                    Exp_Salary_Max: preferences.Exp_Salary_Max
+                }, { transaction: t });
+
+                // Handle Job Category Preferences
+                if (preferences.jobCategoryIds && Array.isArray(preferences.jobCategoryIds)) {
+                    // 1. Delete all old preferences for this user
+                    await Applicant_JobCategory_Preferences.destroy({ where: { ApplicantID: applicantId }, transaction: t });
+                    // 2. Prepare the new preferences to be inserted
+                    const categoryPrefs = preferences.jobCategoryIds.map(id => ({ ApplicantID: applicantId, CategoryID: id }));
+                    // 3. Insert all the new preferences, if any
+                    if (categoryPrefs.length > 0) {
+                        await Applicant_JobCategory_Preferences.bulkCreate(categoryPrefs, { transaction: t });
+                    }
                 }
-                if (preferences.preferredLocations && Array.isArray(preferences.preferredLocations)) {
-                    await sequelize.models.Applicant_Location_Preferences.destroy({ where: { ApplicantID: applicantId }, transaction: t });
-                    await Promise.all(preferences.preferredLocations.map(async (locName) => {
-                        const [location] = await Location.findOrCreate({ where: { LocationName: locName }, transaction: t });
-                        return sequelize.models.Applicant_Location_Preferences.create({ ApplicantID: applicantId, LocationID: location.LocationID }, { transaction: t });
-                    }));
+
+                // Handle Location Preferences with the same logic
+                if (preferences.locationIds && Array.isArray(preferences.locationIds)) {
+                    await Applicant_Location_Preferences.destroy({ where: { ApplicantID: applicantId }, transaction: t });
+                    const locationPrefs = preferences.locationIds.map(id => ({ ApplicantID: applicantId, LocationID: id }));
+                    if (locationPrefs.length > 0) {
+                        await Applicant_Location_Preferences.bulkCreate(locationPrefs, { transaction: t });
+                    }
                 }
             }
         });
@@ -131,7 +172,7 @@ router.post('/form', protect, authorizeApplicant, async (req, res) => {
 });
 
 
-// Other routes are unchanged
+// Other routes are unchanged but depend on the corrected import above
 router.get('/dashboard', protect, authorizeApplicant, async (req, res) => {
     try {
         const applicantId = req.user.UserID;
@@ -155,6 +196,7 @@ router.get('/dashboard', protect, authorizeApplicant, async (req, res) => {
     }
 });
 
+// The /me route is now redundant since /form does the same thing, but we can leave it for now.
 router.get('/me', protect, authorizeApplicant, async (req, res) => {
     try {
         const applicantId = req.user.UserID;
@@ -166,7 +208,7 @@ router.get('/me', protect, authorizeApplicant, async (req, res) => {
                 { model: WorkExperience, as: 'WorkExperiences', include: [{ model: CompanyInformation, as: 'CompanyDetails' }] },
                 { model: Certification, as: 'Certifications' },
                 { model: Preference, as: 'Preferences' },
-                { model: Attachment, as: 'Attachments' }
+                // Note: this route doesn't fetch JobCategories/Locations, only /form does.
             ]
         });
         if (!profile) { return res.status(404).json({ message: 'Applicant profile not found for this user.' }); }

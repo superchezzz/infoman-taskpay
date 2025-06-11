@@ -18,75 +18,74 @@ const ApplicantEditProfile = () => {
   const [deletedEducationIds, setDeletedEducationIds] = useState([]);
   const [deletedWorkExperienceIds, setDeletedWorkExperienceIds] = useState([]);
   const [deletedCertificationIds, setDeletedCertificationIds] = useState([]);
+  const [allCategories, setAllCategories] = useState([]);
+  const [allLocations, setAllLocations] = useState([]);
 
   // useEffect to fetch data when the component loads
   useEffect(() => {
     const fetchProfileData = async () => {
-      setIsLoading(true);
-      try {
-        const authToken = localStorage.getItem('authToken');
-        const api = axios.create({
-          baseURL: 'http://localhost:3001/api',
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        setIsLoading(true);
+        try {
+            const authToken = localStorage.getItem('authToken');
+            const api = axios.create({
+                baseURL: 'http://localhost:3001/api',
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            });
 
-        const response = await api.get('/profile/form');
-              
-        // --- START OF DATA TRANSFORMATION FOR DISPLAY ---
-        const transformedData = {
-            ...response.data, // Start with all fetched data
+            const [profileRes, categoriesRes, locationsRes] = await Promise.all([
+                api.get('/profile/form'),
+                api.get('/lookups/categories'),
+                api.get('/lookups/locations')
+            ]);
 
-            // Transform Educations array for display
-            Educations: response.data.Educations.map(edu => ({
-              ...edu, // Keep original fields like EducationEntryID, Applicant_ID, Course
-              Educational_Attainment: edu.Educ_Level, // Map Backend's 'Educ_Level' to Frontend's 'Educational_Attainment'
-              Institution: edu.School,               // ADDED: Map Backend's 'School' to Frontend's 'Institution'
-              Award: edu.Awards,                     // ADDED: Map Backend's 'Awards' to Frontend's 'Award'
-              Graduation_Year: edu.Yr_Grad           // Map Backend's 'Yr_Grad' to Frontend's 'Graduation_Year'
-            })),
+            const backendProfileData = profileRes.data;
 
-            // Transform WorkExperiences array for display
-            WorkExperiences: response.data.WorkExperiences.map(work => ({
-                ...work, // Keep original fields like WorkExperienceID, Applicant_ID
-                Start_Date: work.inclusive_date_from, // Map Backend -> Frontend
-                End_Date: work.inclusive_date_to,     // Map Backend -> Frontend
-                // Combine CompanyInfo_ID based fields for frontend display if available, otherwise manual
-                Cmp_Name: work.CompanyDetails?.Cmp_Name || work.Cmp_Name_Manual,
-                Cmp_Address: work.CompanyDetails?.Cmp_Address || work.Cmp_Address_Manual,
-            })),
+            // This transformation block now includes the fix for HouseNum_Street
+            const transformedData = {
+                ...backendProfileData,
+                // --- THIS IS THE FIX for Personal Info display ---
+                House_No: backendProfileData.HouseNum_Street, // Create frontend field from backend field
 
-            // Transform Certifications array for display
-            Certifications: response.data.Certifications.map(cert => ({
-                ...cert, // Keep original fields like CertificationEntryID, Applicant_ID
-                Certification_Name: cert.Certifications, // Map Backend -> Frontend (plural to singular)
-                Start_Date: cert.course_date_from, // Map Backend -> Frontend
-                End_Date: cert.course_date_to,     // Map Backend -> Frontend
-            })),
+                Educations: backendProfileData.Educations?.map(edu => ({
+                    ...edu,
+                    Educational_Attainment: edu.Education_Level,
+                    Institution: edu.School,
+                    Award: edu.Awards,
+                    Graduation_Year: edu.Yr_Grad
+                })) || [],
+                WorkExperiences: backendProfileData.WorkExperiences?.map(work => ({
+                    ...work,
+                    Start_Date: work.inclusive_date_from,
+                    End_Date: work.inclusive_date_to,
+                    Cmp_Name: work.CompanyDetails?.Cmp_Name,
+                })) || [],
+                Certifications: backendProfileData.Certifications?.map(cert => ({
+                    ...cert,
+                    Certification_Name: cert.Certifications,
+                    Start_Date: cert.course_date_from,
+                    End_Date: cert.course_date_to,
+                })) || [],
+                Preferences: {
+                    ...(backendProfileData.Preferences || {}),
+                    jobCategoryIds: backendProfileData.JobCategories?.map(cat => cat.CategoryID) || [],
+                    locationIds: backendProfileData.Locations?.map(loc => loc.LocationID) || [],
+                }
+            };
+            
+            setProfileData(transformedData);
+            setAllCategories(categoriesRes.data);
+            setAllLocations(locationsRes.data);
 
-            // Transform Preferences object for display
-            // Ensure Preferences object exists before trying to access its properties
-            Preferences: response.data.Preferences ? {
-                ...response.data.Preferences, // Keep original fields like PreferenceEntryID, Applicant_ID
-                Pref_Job_Categories: response.data.Preferences.Pref_Occupation, // Map Backend -> Frontend
-                Pref_Locations: response.data.Preferences.Pref_Location,     // Map Backend -> Frontend
-                Expected_Salary_Min: response.data.Preferences.Exp_Salary_Min, // Ensure new fields are mapped
-                Expected_Salary_Max: response.data.Preferences.Exp_Salary_Max, // Ensure new fields are mapped
-            } : null, // If no preferences exist, initialize as null or an empty object
-        };
-        // --- END OF DATA TRANSFORMATION FOR DISPLAY ---
-
-        setProfileData(transformedData); // Set the transformed data to state
-        console.log("Transformed Profile Data for Display:", transformedData); // Debugging: Check console to see the transformed data
-      } catch (error) {
-          console.error("Failed to fetch profile data", error);
-          alert("Could not load your profile data. Please try again.");
-      } finally {
-          setIsLoading(false);
-      }
+        } catch (error) {
+            console.error("Failed to fetch profile data", error);
+            alert("Could not load your profile data. Please try again.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     fetchProfileData();
-  }, []); // The empty array [] means this runs once when the component mounts
+  }, []);
 
   // Changed initial state to null so no section is open by default
   const [activeSection, setActiveSection] = useState(null);
@@ -189,9 +188,37 @@ const ApplicantEditProfile = () => {
   };
 
   const addToArray = (section, newItem) => {
+    let transformedItem = { ...newItem };
+
+    // When adding a new education item, we need to map the frontend-friendly
+    // names to the backend-friendly names so the data structure is consistent
+    // with items loaded from the database.
+    if (section === 'Educations') {
+        transformedItem = {
+            ...newItem,
+            // Ensure both frontend and backend property names exist for consistency
+            Educational_Attainment: newItem.Educational_Attainment, // from form
+            Educ_Level: newItem.Educational_Attainment,             // for backend
+
+            Institution: newItem.Institution,
+            School: newItem.Institution,
+
+            Course: newItem.Course,
+
+            Graduation_Year: newItem.Graduation_Year,
+            Yr_Grad: newItem.Graduation_Year,
+
+            Award: newItem.Award,
+            Awards: newItem.Award,
+        };
+    }
+    
+    // You can add similar 'if (section === ...)' blocks here for
+    // WorkExperience or Certifications if they have similar issues.
+
     setProfileData((prevData) => ({
-      ...prevData,
-      [section]: [...prevData[section], newItem],
+        ...prevData,
+        [section]: [...(prevData[section] || []), transformedItem],
     }));
   };
 
@@ -220,11 +247,9 @@ const ApplicantEditProfile = () => {
 
   const handleSubmitProfile = async () => {
     if (!profileData) {
-        console.log("Submit button clicked, but profileData is not ready.");
+        console.error("Submit called but profileData is not ready.");
         return;
     }
-
-    console.log("1. Preparing to submit profile...");
 
     try {
         const authToken = localStorage.getItem('authToken');
@@ -233,123 +258,59 @@ const ApplicantEditProfile = () => {
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
 
-        // --- START OF DATA TRANSFORMATION ---
         const payload = {
-            // Personal Info (top-level fields are usually direct matches or handled by backend)
-            // Ensure these match your backend's Applicant model field names
-            Surname: profileData.Surname,
-            First_Name: profileData.First_Name,
-            Middle_Name: profileData.Middle_Name,
-            Suffix: profileData.Suffix,
-            Age: profileData.Age,
-            Sex: profileData.Sex,
-            Civil_Status: profileData.Civil_Status,
-            DOB: profileData.DOB,
-            Place_of_Birth: profileData.Place_of_Birth,
-            House_No: profileData.House_No,
-            Street: profileData.Street,
-            Brgy: profileData.Brgy,
-            City: profileData.City,
-            Province: profileData.Province,
-            TIN_No: profileData.TIN_No,
-            SSS_No: profileData.SSS_No,
-            Philhealth_No: profileData.Philhealth_No,
-            Landline: profileData.Landline,
-            Phone_Num: profileData.Phone_Num,
-            Disability: profileData.Disability,
-            Emp_Status: profileData.Emp_Status,
-
-            // Education: Map frontend 'Educations' array to backend 'education' array
-            // EXCLUDE EducationEntryID to ensure new IDs are generated by backend after destroy
-            // Education: Send current items (including IDs for existing) and deleted IDs
-            education: {
-              items: profileData.Educations.map(edu => ({
-                  // Include ID if it exists (for existing entries), exclude for new ones
-                  ...(edu.EducationEntryID && { EducationEntryID: edu.EducationEntryID }),
-                  Educ_Level: edu.Educational_Attainment,
-                  School: edu.Institution,
-                  Course: edu.Course,
-                  Awards: edu.Award,
-                  Yr_Grad: edu.Graduation_Year
-              })),
-              deletedIds: deletedEducationIds
-          },
-
-          // Work Experiences: Send current items and deleted IDs
-          workExperiences: {
-              items: profileData.WorkExperiences.map(job => ({
-                  // Include ID if it exists, exclude for new ones
-                  ...(job.WorkExperienceID && { WorkExperienceID: job.WorkExperienceID }),
-                  Position: job.Position,
-                  Cmp_Name: job.Cmp_Name,
-                  Cmp_Address: job.Cmp_Address,
-                  inclusive_date_from: job.Start_Date,
-                  inclusive_date_to: job.End_Date,
-                  Status: job.Status,
-                  Responsibilities: job.Responsibilities,
-              })),
-              deletedIds: deletedWorkExperienceIds
-          },
-
-          // Certifications: Send current items and deleted IDs
-          certifications: {
-              items: profileData.Certifications.map(cert => ({
-                  // Include ID if it exists, exclude for new ones
-                  ...(cert.CertificationEntryID && { CertificationEntryID: cert.CertificationEntryID }),
-                  Certifications: cert.Certification_Name,
-                  Issuing_Organization: cert.Issuing_Organization,
-                  course_date_from: cert.Start_Date,
-                  course_date_to: cert.End_Date,
-                  Training_Duration: cert.Training_Duration,
-              })),
-              deletedIds: deletedCertificationIds
-          },
-
-            // Preferences: Map frontend 'Preferences' object
-            // NOTE: Backend has 'Exp_Salary' (single decimal), Frontend has min/max
+            personalInfo: {
+                Surname: profileData.Surname, First_Name: profileData.First_Name,
+                Middle_Name: profileData.Middle_Name, Suffix: profileData.Suffix,
+                Age: profileData.Age, Sex: profileData.Sex,
+                Civil_Status: profileData.Civil_Status, DOB: profileData.DOB,
+                Place_of_Birth: profileData.Place_of_Birth,
+                HouseNum_Street: profileData.House_No, // This mapping is correct for saving
+                Brgy: profileData.Brgy, City: profileData.City,
+                Province: profileData.Province, TIN_No: profileData.TIN_No,
+                SSS_No: profileData.SSS_No, Philhealth_No: profileData.Philhealth_No,
+                Phone_Num: profileData.Phone_Num, Disability: profileData.Disability,
+                Emp_Status: profileData.Emp_Status,
+            },
+            education: profileData.Educations?.map(edu => ({
+                EducationEntryID: edu.EducationEntryID, Education_Level: edu.Educational_Attainment,
+                School: edu.Institution, Course: edu.Course,
+                Awards: edu.Award, Yr_Grad: edu.Graduation_Year
+            })),
+            workExperiences: profileData.WorkExperiences?.map(job => ({
+                WorkExperienceID: job.WorkExperienceID, Position: job.Position,
+                Cmp_Name: job.Cmp_Name, Cmp_Address: job.Cmp_Address,
+                inclusive_date_from: job.Start_Date, inclusive_date_to: job.End_Date,
+                Status: job.Status, Responsibilities: job.Responsibilities
+            })),
+            certifications: profileData.Certifications?.map(cert => ({
+                CertificationEntryID: cert.CertificationEntryID, Certifications: cert.Certification_Name,
+                Issuing_Organization: cert.Issuing_Organization,
+                course_date_from: cert.Start_Date, course_date_to: cert.End_Date,
+                Training_Duration: cert.Training_Duration
+            })),
             preferences: {
-                Pref_Occupation: profileData.Preferences?.Pref_Job_Categories || null, // Comma-separated string
-                Pref_Location: profileData.Preferences?.Pref_Locations || null,     // Comma-separated string
-                // Decide how to map min/max to a single Exp_Salary on backend:
-                Exp_Salary: profileData.Preferences?.Expected_Salary_Min || null, // Sending min, adjust logic on backend or here
+              Exp_Salary_Min: profileData.Preferences?.Exp_Salary_Min || null,
+              Exp_Salary_Max: profileData.Preferences?.Exp_Salary_Max || null,
+              jobCategoryIds: profileData.Preferences?.jobCategoryIds || [],
+              locationIds: profileData.Preferences?.locationIds || []
+            },
+            deletedIds: {
+                education: deletedEducationIds,
+                workExperience: deletedWorkExperienceIds,
+                certifications: deletedCertificationIds
             }
         };
-        // --- END OF DATA TRANSFORMATION ---
 
-        console.log("2. Sending POST request to /api/profile/form with payload:", payload); // Checkpoint 2
+        // --- THIS IS THE DIAGNOSTIC STEP for the preferences issue ---
+        console.log("Submitting this payload to backend:", JSON.stringify(payload, null, 2));
 
-        // Send the transformed payload to the backend
         await api.post('/profile/form', payload);
-
-        console.log("3. Main profile submit request was successful!"); // Checkpoint 3
-
-        // --- Resume Upload (Separate API Call) ---
-        if (profileData.resume) {
-            console.log("4. Attempting to upload resume...");
-            const formData = new FormData();
-            formData.append('resume', profileData.resume); // 'resume' must match field name in uploadMiddleware.js
-
-            // You might need a separate API instance for file uploads if headers differ
-            const uploadApi = axios.create({
-                baseURL: 'http://localhost:3001/api',
-                headers: {
-                    'Authorization': `Bearer ${authToken}`,
-                    'Content-Type': 'multipart/form-data', // Crucial for file uploads
-                },
-            });
-            await uploadApi.post('/uploads/resume', formData);
-            console.log("5. Resume upload successful!");
-        } else {
-            console.log("4. No resume file to upload.");
-        }
-        // --- End Resume Upload ---
-
         alert('Profile updated successfully!');
         navigate('/applicant-dashboard');
 
     } catch (error) {
-        console.error("An error occurred during submission:", error);
-        // Provide more granular error messages if possible, e.g., error.response.data.errors
+        console.error("An error occurred during profile submission:", error);
         alert(`Error: ${error.response?.data?.message || 'Could not save profile.'}`);
     }
 };
@@ -378,7 +339,11 @@ const ApplicantEditProfile = () => {
             </div>
 
             {isPreviewMode ? (
-              <ProfilePreview profileData={profileData} />
+              <ProfilePreview
+                profileData={profileData}
+                allCategories={allCategories} // Pass the categories list
+                allLocations={allLocations}   // Pass the locations list
+              />
             ) : (
               <>
                 {/* Personal Information */}
@@ -406,14 +371,10 @@ const ApplicantEditProfile = () => {
                   </div>
                   {activeSection === 'educationalBackground' && profileData && (
                     <EducationalBackgroundForm
-                      educationalBackground={profileData.Educations.map(edu => ({
-                        ...edu,
-                        Educational_Attainment: edu.Educ_Level,
-                        Yr_Grad: edu.Yr_Grad
-                      }))}
+                      educationalBackground={profileData.Educations} // CORRECTED: Pass the data directly
                       onInputChange={(index, field, value) => handleArrayChange('Educations', index, field, value)}
                       onAddEducation={(newItem) => addToArray('Educations', newItem)}
-                      onRemoveEducation={(index) => handleRemoveFromArray('Educations', index)}
+                      onRemoveEducation={(index) => handleRemoveFromArray('Educations', 'EducationEntryID', index)}
                       onSaveAndContinue={() => handleSaveAndContinue('workExperience')}
                     />
                   )}
@@ -467,9 +428,11 @@ const ApplicantEditProfile = () => {
                       preferences={profileData.Preferences}
                       onPreferenceChange={handlePreferenceChange}
                       onSaveAndContinue={() => handleSaveAndContinue('resumeUpload')}
+                      allCategories={allCategories}
+                      allLocations={allLocations}
                     />
                   )}
-                </div>
+                  </div>
 
                 <div className="profile-section">
                   <div className="section-header" onClick={() => toggleSection('resumeUpload')}>

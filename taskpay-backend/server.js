@@ -26,6 +26,7 @@ const taskRoutes = require('./routes/taskRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
 const fileUploadRoutes = require('./routes/fileUploadRoutes');
 const clientRoutes = require('./routes/clientRoutes');
+const lookupRoutes = require('./routes/lookupRoutes');
 
 // Middleware imports
 const { protect } = require('./middleware/authMiddleware');
@@ -77,6 +78,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/applications', protect, applicationRoutes);
 app.use('/api/uploads', protect, fileUploadRoutes); 
 app.use('/api/clients', clientRoutes); 
+app.use('/api/lookups', lookupRoutes);
 
 // --- Centralized Error Handling ---
 app.use((err, req, res, next) => {

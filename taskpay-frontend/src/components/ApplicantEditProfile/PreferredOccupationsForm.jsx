@@ -1,114 +1,94 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
+import Select from 'react-select';
 
-const PreferredOccupationsForm = ({ preferences, onPreferenceChange, onSaveAndContinue }) => {
-  const [newJobCategory, setNewJobCategory] = useState('');
-  const [newPreferredLocation, setNewPreferredLocation] = useState('');
+// Styles needed for the menuPortalTarget fix
+const portalStyles = {
+    menuPortal: base => ({ ...base, zIndex: 9999 }) // Ensure dropdown appears on top of everything
+};
 
-  // Use useMemo to safely parse the categories and locations once
-  const jobCategories = useMemo(() => {
-    // Assumes categories are stored as a comma-separated string in the database
-    if (preferences?.Pref_Job_Categories) {
-      return preferences.Pref_Job_Categories.split(',').filter(c => c);
-    }
-    return [];
-  }, [preferences]);
+const PreferredOccupationsForm = ({ preferences, onPreferenceChange, onSaveAndContinue, allCategories, allLocations }) => {
 
-  const preferredLocations = useMemo(() => {
-    if (preferences?.Pref_Locations) {
-      return preferences.Pref_Locations.split(',').filter(l => l);
-    }
-    return [];
-  }, [preferences]);
+    // Format the options for react-select: { value, label }
+    const categoryOptions = allCategories.map(cat => ({ value: cat.CategoryID, label: cat.CategoryName }));
+    const locationOptions = allLocations.map(loc => ({ value: loc.LocationID, label: loc.LocationName }));
 
+    // --- FIX #1: This logic now correctly determines the selected values ---
+    // It checks the 'jobCategoryIds' and 'locationIds' that are updated by the onChange handler.
+    const selectedCategoryValues = categoryOptions.filter(option =>
+        (preferences?.jobCategoryIds || []).includes(option.value)
+    );
+    const selectedLocationValues = locationOptions.filter(option =>
+        (preferences?.locationIds || []).includes(option.value)
+    );
 
-  const handleAddTag = (type) => {
-    if (type === 'category' && newJobCategory && !jobCategories.includes(newJobCategory)) {
-      const newArray = [...jobCategories, newJobCategory];
-      onPreferenceChange('Pref_Job_Categories', newArray.join(','));
-      setNewJobCategory('');
-    } else if (type === 'location' && newPreferredLocation && !preferredLocations.includes(newPreferredLocation)) {
-      const newArray = [...preferredLocations, newPreferredLocation];
-      onPreferenceChange('Pref_Locations', newArray.join(','));
-      setNewPreferredLocation('');
-    }
-  };
+    // This handler correctly extracts the IDs and sends them to the parent state
+    const handleSelectChange = (selectedOptions, type) => {
+        const selectedIds = selectedOptions ? selectedOptions.map(option => option.value) : [];
+        if (type === 'category') {
+            onPreferenceChange('jobCategoryIds', selectedIds);
+        } else if (type === 'location') {
+            onPreferenceChange('locationIds', selectedIds);
+        }
+    };
 
-  const handleRemoveTag = (type, tagToRemove) => {
-    if (type === 'category') {
-      const newArray = jobCategories.filter(tag => tag !== tagToRemove);
-      onPreferenceChange('Pref_Job_Categories', newArray.join(','));
-    } else if (type === 'location') {
-      const newArray = preferredLocations.filter(tag => tag !== tagToRemove);
-      onPreferenceChange('Pref_Locations', newArray.join(','));
-    }
-  };
+    return (
+        <div className="preferred-occupations-form-content">
+            <div className="form-group">
+                <label>Job Categories</label>
+                <Select
+                    isMulti
+                    options={categoryOptions}
+                    value={selectedCategoryValues}
+                    onChange={(selected) => handleSelectChange(selected, 'category')}
+                    placeholder="Select job categories..."
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                    // --- FIX #2: Add these props to prevent the menu from being cut off ---
+                    menuPortalTarget={document.body}
+                    styles={portalStyles}
+                />
+            </div>
 
-  return (
-    <div className="preferred-occupations-form-content">
-      <div className="form-group">
-        <label>Job Categories</label>
-        <div className="tags-container">
-          {jobCategories.map((category, index) => (
-            <span key={index} className="tag">
-              {category}
-              <button type="button" onClick={() => handleRemoveTag('category', category)}>X</button>
-            </span>
-          ))}
-          <input
-            type="text"
-            value={newJobCategory}
-            onChange={(e) => setNewJobCategory(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag('category'))}
-            placeholder="Type and press Enter or Add"
-          />
-          <button type="button" onClick={() => handleAddTag('category')}>Add</button>
+            <div className="form-row">
+                <div className="form-group half-width">
+                    <label>Expected salary range (Minimum)</label>
+                    <input
+                        type="number"
+                        value={preferences?.Exp_Salary_Min || ''}
+                        onChange={(e) => onPreferenceChange('Exp_Salary_Min', e.target.value)}
+                        placeholder="Minimum"
+                    />
+                </div>
+                <div className="form-group half-width">
+                    <label>Expected salary range (Maximum)</label>
+                    <input
+                        type="number"
+                        value={preferences?.Exp_Salary_Max || ''}
+                        onChange={(e) => onPreferenceChange('Exp_Salary_Max', e.target.value)}
+                        placeholder="Maximum"
+                    />
+                </div>
+            </div>
+
+            <div className="form-group">
+                <label>Preferred Locations</label>
+                <Select
+                    isMulti
+                    options={locationOptions}
+                    value={selectedLocationValues}
+                    onChange={(selected) => handleSelectChange(selected, 'location')}
+                    placeholder="Select preferred locations..."
+                    className="react-select-container"
+                    classNamePrefix="react-select"
+                    // --- FIX #2: Add these props to prevent the menu from being cut off ---
+                    menuPortalTarget={document.body}
+                    styles={portalStyles}
+                />
+            </div>
+
+            <button onClick={onSaveAndContinue} className="save-continue-button">Save & Continue</button>
         </div>
-      </div>
-
-      <div className="form-row">
-        <div className="form-group half-width">
-          <label>Expected salary range (Minimum)</label>
-          <input
-            type="number"
-            value={preferences?.Expected_Salary_Min || ''}
-            onChange={(e) => onPreferenceChange('Expected_Salary_Min', e.target.value)}
-            placeholder="Minimum"
-          />
-        </div>
-        <div className="form-group half-width">
-          <label>Expected salary range (Maximum)</label>
-          <input
-            type="number"
-            value={preferences?.Expected_Salary_Max || ''}
-            onChange={(e) => onPreferenceChange('Expected_Salary_Max', e.target.value)}
-            placeholder="Maximum"
-          />
-        </div>
-      </div>
-
-      <div className="form-group">
-        <label>Preferred Locations</label>
-        <div className="tags-container">
-          {preferredLocations.map((location, index) => (
-            <span key={index} className="tag">
-              {location}
-              <button type="button" onClick={() => handleRemoveTag('location', location)}>X</button>
-            </span>
-          ))}
-          <input
-            type="text"
-            value={newPreferredLocation}
-            onChange={(e) => setNewPreferredLocation(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag('location'))}
-            placeholder="Type and press Enter or Add"
-          />
-          <button type="button" onClick={() => handleAddTag('location')}>Add</button>
-        </div>
-      </div>
-
-      <button onClick={onSaveAndContinue} className="save-continue-button">Save & Continue</button>
-    </div>
-  );
+    );
 };
 
 export default PreferredOccupationsForm;

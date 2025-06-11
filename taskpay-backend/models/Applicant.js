@@ -62,7 +62,7 @@ module.exports = (sequelize, DataTypes) => {
         sequelize,
         modelName: 'Applicant',
         tableName: 'APPLICANT',
-        timestamps: true, // Assuming your table has CreatedAt and UpdatedAt
+        timestamps: false, // Assuming your table has CreatedAt and UpdatedAt
         updatedAt: 'UpdatedAt',
         createdAt: 'CreatedAt',
     });

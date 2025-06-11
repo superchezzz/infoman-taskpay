@@ -1,11 +1,12 @@
-const { Model } = require('sequelize'); // Import Model directly from the sequelize library
+// models/Education.js
+const { Model } = require('sequelize');
 
-module.exports = (sequelize, DataTypes) => { // sequelize instance is still passed for init
-    class Education extends Model { // Extend the imported Model
+module.exports = (sequelize, DataTypes) => {
+    class Education extends Model {
         static associate(models) {
             Education.belongsTo(models.Applicant, {
                 foreignKey: 'Applicant_ID',
-                as: 'Applicant'
+                as: 'Educations' // Corrected alias to match other models
             });
         }
     }
@@ -20,11 +21,11 @@ module.exports = (sequelize, DataTypes) => { // sequelize instance is still pass
             type: DataTypes.INTEGER,
             allowNull: false,
             references: {
-                model: 'APPLICANT', // Table name for raw reference
+                model: 'APPLICANT', // Ensure this table name is correct
                 key: 'Applicant_ID'
             }
         },
-        Educ_Level: {
+        Education_Level: {
             type: DataTypes.STRING(255),
             allowNull: false
         },
@@ -40,19 +41,23 @@ module.exports = (sequelize, DataTypes) => { // sequelize instance is still pass
             type: DataTypes.TEXT,
             allowNull: true
         },
+        // --- THIS IS THE FIX ---
+        // The YEAR data type in MySQL is represented by INTEGER in Sequelize.
         Yr_Grad: {
-            type: DataTypes.STRING(20),
+            type: DataTypes.INTEGER,
             allowNull: true
         }
     }, {
-        sequelize, // Pass the sequelize instance here for init
+        sequelize,
         modelName: 'Education',
         tableName: 'EDUCATION',
-        timestamps: true,
-        indexes: [{
-            unique: true,
-            fields: ['Applicant_ID', 'Educ_Level', 'School', 'Course']
-        }]
+        timestamps: false, // We confirmed this is desired
+        indexes: [
+            {
+                unique: true,
+                fields: ['Applicant_ID', 'Education_Level', 'School', 'Course']
+            }
+        ]
     });
 
     return Education;

@@ -1,54 +1,70 @@
+'use strict';
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
-    class Applicant extends sequelize.Sequelize.Model {
+    class Applicant extends Model {
         static associate(models) {
+            // An Applicant is a type of User
             Applicant.belongsTo(models.User, {
                 foreignKey: 'Applicant_ID',
-                as: 'UserAccountDetails' // Changed from UserDetails for clarity
+                as: 'UserAccountDetails'
             });
 
-            Applicant.hasMany(models.Education, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Educations' });
-            Applicant.hasMany(models.Certification, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Certifications' });
-            Applicant.hasMany(models.WorkExperience, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'WorkExperiences' });
-            Applicant.hasMany(models.Preference, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Preferences' });
-            Applicant.hasMany(models.Attachment, { foreignKey: 'Applicant_ID', onDelete: 'CASCADE', as: 'Attachments' });
+            // An Applicant has many educational entries, work experiences, etc.
+            Applicant.hasMany(models.Education, { foreignKey: 'Applicant_ID', as: 'Educations' });
+            Applicant.hasMany(models.WorkExperience, { foreignKey: 'Applicant_ID', as: 'WorkExperiences' });
+            Applicant.hasMany(models.Certification, { foreignKey: 'Applicant_ID', as: 'Certifications' });
+            Applicant.hasMany(models.Attachment, { foreignKey: 'Applicant_ID', as: 'Attachments' });
+            
+            // --- NEW AND CORRECTED ASSOCIATIONS ---
+            // An Applicant has one set of Preferences (for salary)
+            Applicant.hasOne(models.Preference, { foreignKey: 'Applicant_ID', as: 'Preferences' });
+
+            // An Applicant can have many preferred Job Categories through the join table
+            Applicant.belongsToMany(models.JobCategory, {
+                through: 'Applicant_JobCategory_Preferences',
+                foreignKey: 'ApplicantID',
+                otherKey: 'CategoryID',
+                as: 'JobCategories'
+            });
+
+            // An Applicant can have many preferred Locations through the join table
+            Applicant.belongsToMany(models.Location, {
+                through: 'Applicant_Location_Preferences',
+                foreignKey: 'ApplicantID',
+                otherKey: 'LocationID',
+                as: 'Locations'
+            });
         }
     }
-
     Applicant.init({
-        Applicant_ID: {
-            type: DataTypes.INTEGER,
-            primaryKey: true,
-            references: {
-                model: 'Users', // Table name
-                key: 'UserID'
-            }
-        },
-        Surname: { type: DataTypes.STRING(255), allowNull: false },
-        First_Name: { type: DataTypes.STRING(255), allowNull: false },
-        Middle_Name: { type: DataTypes.STRING(255), allowNull: true },
-        Suffix: { type: DataTypes.STRING(50), allowNull: true },
-        Age: { type: DataTypes.INTEGER, allowNull: true },
-        Sex: { type: DataTypes.STRING(20), allowNull: true },
-        Civil_Status: { type: DataTypes.STRING(50), allowNull: true },
-        DOB: { type: DataTypes.DATEONLY, allowNull: true },
-        Place_of_Birth: { type: DataTypes.STRING(255), allowNull: true },
-        House_No: { type: DataTypes.STRING(100), allowNull: true },
-        Street: { type: DataTypes.STRING(255), allowNull: true },
-        Brgy: { type: DataTypes.STRING(255), allowNull: true },
-        City: { type: DataTypes.STRING(255), allowNull: true },
-        Province: { type: DataTypes.STRING(255), allowNull: true },
-        TIN_No: { type: DataTypes.STRING(50), allowNull: true },
-        SSS_No: { type: DataTypes.STRING(50), allowNull: true },
-        Philhealth_No: { type: DataTypes.STRING(50), allowNull: true },
-        Landline: { type: DataTypes.STRING(50), allowNull: true },
-        Phone_Num: { type: DataTypes.STRING(50), allowNull: true },
-        Disability: { type: DataTypes.STRING(255), allowNull: true },
-        Emp_Status: { type: DataTypes.STRING(100), allowNull: true }
+        Applicant_ID: { type: DataTypes.INTEGER, primaryKey: true },
+        Surname: { type: DataTypes.STRING, allowNull: false },
+        First_Name: { type: DataTypes.STRING, allowNull: false },
+        Middle_Name: DataTypes.STRING,
+        Suffix: DataTypes.STRING,
+        Age: DataTypes.INTEGER,
+        Sex: DataTypes.STRING,
+        Civil_Status: DataTypes.STRING,
+        DOB: DataTypes.DATE,
+        Place_of_Birth: DataTypes.STRING,
+        HouseNum_Street: DataTypes.STRING,
+        Brgy: DataTypes.STRING,
+        City: DataTypes.STRING,
+        Province: DataTypes.STRING,
+        TIN_No: DataTypes.STRING,
+        SSS_No: DataTypes.STRING,
+        Philhealth_No: DataTypes.STRING,
+        Phone_Num: DataTypes.STRING,
+        Disability: DataTypes.STRING,
+        Emp_Status: DataTypes.STRING
     }, {
         sequelize,
         modelName: 'Applicant',
         tableName: 'APPLICANT',
-        timestamps: true
+        timestamps: true, // Assuming your table has CreatedAt and UpdatedAt
+        updatedAt: 'UpdatedAt',
+        createdAt: 'CreatedAt',
     });
     return Applicant;
 };

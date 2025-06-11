@@ -1,26 +1,14 @@
-// taskpay-backend/models/Task.js
 module.exports = (sequelize, DataTypes) => {
     class Task extends sequelize.Sequelize.Model {
         static associate(models) {
-            // Task has many TaskApplications
-            Task.hasMany(models.TaskApplication, {
-                foreignKey: 'Task_ID',
-                as: 'Applications'
-            });
-
-            // If tasks are created by users (clients/admins) - for future
-            // Task.belongsTo(models.User, {
-            //     foreignKey: 'ClientID',
-            //     as: 'ClientPoster' // Changed alias for clarity
-            // });
+            Task.hasMany(models.TaskApplication, { foreignKey: 'Task_ID', as: 'Applications' });
         }
     }
-
     Task.init({
         TaskID: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
         Title: { type: DataTypes.STRING(255), allowNull: false },
         Description: { type: DataTypes.TEXT, allowNull: false },
-        ClientID: { type: DataTypes.INTEGER, allowNull: true /* references: { model: 'Users', key: 'UserID' } */ },
+        ClientID: { type: DataTypes.INTEGER, allowNull: true },
         ClientName: { type: DataTypes.STRING(255), allowNull: true },
         Budget: { type: DataTypes.DECIMAL(12, 2), allowNull: true },
         Category: { type: DataTypes.STRING(100), allowNull: true },
@@ -33,8 +21,7 @@ module.exports = (sequelize, DataTypes) => {
         sequelize,
         modelName: 'Task',
         tableName: 'Tasks',
-        timestamps: true
+        timestamps: false // Corrected
     });
-
     return Task;
 };

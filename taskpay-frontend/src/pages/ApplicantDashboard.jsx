@@ -29,7 +29,9 @@ import { getClientInitials } from "../utils/formatName.js";
 
 function ApplicantDashboard() {
     const [applicantProfile, setApplicantProfile] = useState(null);
-    const [taskApplications, setTaskApplications] = useState([]);
+    // --- CHANGE 1: We now have two separate states for our lists.
+    const [activeApplications, setActiveApplications] = useState([]);
+    const [historicalApplications, setHistoricalApplications] = useState([]);
     const [submissionStatus, setSubmissionStatus] = useState({ message: '', isError: false });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
@@ -45,23 +47,19 @@ function ApplicantDashboard() {
     // State to hold the task being viewed in the detail modal
     const [currentViewedTask, setCurrentViewedTask] = useState(null);
 
-    // State for Available Tasks pagination
+    // State for Available Tasks pagination (this part is unchanged)
     const [availableTasks, setAvailableTasks] = useState([]);
     const [availableTasksCurrentPage, setAvailableTasksCurrentPage] = useState(1);
     const [availableTasksTotalPages, setAvailableTasksTotalPages] = useState(1);
     // eslint-disable-next-line no-unused-vars
     const [availableTasksLimit, setAvailableTasksLimit] = useState(10); // Define items per page, e.g., 5
-
-    // State for Task History pagination (future implementation, but set up variables)
-    const [taskHistory, setTaskHistory] = useState([]);
-    const [taskHistoryCurrentPage, setTaskHistoryCurrentPage] = useState(1);
-    const [taskHistoryTotalPages, setTaskHistoryTotalPages] = useState(1);
-    // eslint-disable-next-line no-unused-vars
-    const [taskHistoryLimit, setTaskHistoryLimit] = useState(10); // Define items per page, e.g., 5
+    
+    // --- CHANGE 2: The 'taskHistory' state and its pagination are no longer needed.
+    // They have been removed.
 
     const [documents, setDocuments] = useState(null);
 
-    // Function to fetch available tasks with pagination
+    // Function to fetch available tasks with pagination (unchanged)
     const fetchAvailableTasks = async (pageToFetch = 1) => {
         try {
             const authToken = localStorage.getItem('authToken');
@@ -70,7 +68,6 @@ function ApplicantDashboard() {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
 
-            // CORRECTED LINE: Removed the HTML tags and backslashes
             const response = await api.get(`/tasks/available?page=${pageToFetch}&limit=${availableTasksLimit}`);
 
             setAvailableTasks(response.data.tasks || []);
@@ -86,29 +83,8 @@ function ApplicantDashboard() {
         }
     };
 
-    // Function to fetch task history with pagination
-    const fetchTaskHistory = async (pageToFetch = 1) => {
-        try {
-            const authToken = localStorage.getItem('authToken');
-            const api = axios.create({
-                baseURL: 'http://localhost:3001/api', // Make sure this is 'http://localhost:3001/api'
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            });
-
-            const response = await api.get(`/applications/history?page=${pageToFetch}&limit=${taskHistoryLimit}`);
-
-            setTaskHistory(response.data.history || []);
-            setTaskHistoryCurrentPage(response.data.currentPage);
-            setTaskHistoryTotalPages(response.data.totalPages);
-
-        } catch (error) {
-            console.error("Error fetching task history:", error);
-            alert("Could not load task history. Please try again.");
-            setTaskHistory([]);
-            setTaskHistoryCurrentPage(1);
-            setTaskHistoryTotalPages(1);
-        }
-    };
+    // --- CHANGE 3: The fetchTaskHistory function is no longer needed and has been deleted.
+    // The data now comes from the main fetchDashboardData call.
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -128,14 +104,15 @@ function ApplicantDashboard() {
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
 
+            // --- CHANGE 4: The try block now populates our two new lists. ---
             try {
-                // We make ONE API call to our new, efficient endpoint.
                 const response = await api.get('/profile/dashboard');
-
-                // The response.data object contains both profile and applications.
+            
+                // Populate the new active and historical states from the API
                 setApplicantProfile(response.data.profile);
-                setTaskApplications(response.data.applications || []);
-
+                setActiveApplications(response.data.activeApplications || []);
+                setHistoricalApplications(response.data.historicalApplications || []);
+            
             } catch (err) {
                 console.error("Error fetching dashboard data:", err);
                 const errorMessage = err.response?.data?.message || "Could not load your dashboard. Please try logging in again.";
@@ -170,10 +147,8 @@ function ApplicantDashboard() {
         }
     };
 
-    // Handler to open the generic task detail modal, closing others if needed
+    // This function is unchanged
     const handleViewAnyTaskDetail = (item) => {
-        // This line smartly finds the task data, whether it's
-        // a direct task object (from 'available') or nested inside an application object (from 'history').
         const taskData = item.TaskDetails || item;
     
         const formattedTaskForModal = {
@@ -187,50 +162,66 @@ function ApplicantDashboard() {
             applicants: taskData.applicantCount !== undefined ? taskData.applicantCount : 'N/A',
             client: taskData.ClientName,
             category: taskData.Category,
-            location: taskData.Location, // Added location
-            status: item.Status, // The application status is on the top-level item
+            location: taskData.Location,
+            status: item.Status,
         };
         
         setCurrentViewedTask(formattedTaskForModal);
         setIsMyTaskDetailModalOpen(true);
     };
 
+    // This function is unchanged
     const handleApplyForNewTaskClick = async () => {
-        await fetchAvailableTasks(1); // Fetch the first page when opening the modal
+        await fetchAvailableTasks(1);
         setIsApplyForNewTaskModalOpen(true);
     };
 
-    const handleApplyTask = async (task) => {
+    const handleApplyTask = async (task) => { // 'task' is the object from the "Available Tasks" modal
         try {
             const authToken = localStorage.getItem('authToken');
             const api = axios.create({
                 baseURL: 'http://localhost:3001/api',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-
-            await api.post(`/applications/tasks/${task.TaskID}/apply`);
-
-            // On success, set a success message
+    
+            // 1. Capture the response from the server
+            const response = await api.post(`/applications/tasks/${task.TaskID}/apply`);
+    
+            // --- THIS IS THE NEW LOGIC ---
+    
+            // 2. Get the new application record from the response
+            const newApplicationFromServer = response.data.application;
+    
+            // 3. Create a complete object for our state, combining the new application data
+            //    with the task details we already have.
+            const newApplicationForState = {
+                ...newApplicationFromServer,
+                TaskDetails: task
+            };
+    
+            // 4. Add the new application to the top of the active applications list
+            setActiveApplications(prev => [newApplicationForState, ...prev]);
+    
+            // The rest of the function remains the same
             setSubmissionStatus({ message: `Successfully applied for ${task.Title}!`, isError: false });
-
-            // Close the modal automatically after 2 seconds
+    
             setTimeout(() => {
                 setIsApplyForNewTaskModalOpen(false);
+                // Also clear the submission status when closing the modal
+                setSubmissionStatus({ message: '', isError: false });
             }, 2000);
-
+    
         } catch (apiError) {
             console.error("Error applying for task:", apiError);
-            // On error, set an error message
             const errorMessage = apiError.response?.data?.message || 'An unexpected error occurred.';
             setSubmissionStatus({ message: `Failed to apply: ${errorMessage}`, isError: true });
         }
     };
 
-    const handleViewTaskHistoryClick = async () => {
-        await fetchTaskHistory(1); // Fetch the first page of history
-        setIsTaskHistoryModalOpen(true);
-    };
+    // --- CHANGE 5: This function is no longer needed and has been deleted. ---
+    // const handleViewTaskHistoryClick = async () => { ... }
 
+    // This function is unchanged
     const handleMyDocumentsClick = async () => {
         try {
             const authToken = localStorage.getItem('authToken');
@@ -238,23 +229,17 @@ function ApplicantDashboard() {
                 baseURL: 'http://localhost:3001/api',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-    
             const response = await api.get('/profile/documents');
-    
-            // Set the state with the user's real data from the database
             setDocuments(response.data);
-    
-            // Now open the modal
             setIsMyDocumentsModalOpen(true);
-    
         } catch (error) {
             console.error("Error fetching documents:", error);
-            // If there's an error, we can open the form with empty values
             setDocuments({ tinNumber: '', sssNumber: '', philhealthNumber: '' });
             setIsMyDocumentsModalOpen(true);
         }
     };
 
+    // This function is unchanged
     const handleUpdateDocuments = async (updatedDocs) => {
         try {
             const authToken = localStorage.getItem('authToken');
@@ -262,11 +247,8 @@ function ApplicantDashboard() {
                 baseURL: 'http://localhost:3001/api',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-    
-            // Calling the new endpoint we just created
             await api.put('/profile/documents', updatedDocs);
-    
-            setDocuments(updatedDocs); // Update the local state
+            setDocuments(updatedDocs);
             alert('Documents updated successfully!');
             setIsMyDocumentsModalOpen(false);
         } catch (apiError) {
@@ -275,6 +257,7 @@ function ApplicantDashboard() {
         }
     };
 
+    // This function is unchanged
     const handleStartTask = async (task) => {
         try {
             const authToken = localStorage.getItem('authToken');
@@ -282,18 +265,16 @@ function ApplicantDashboard() {
                 baseURL: 'http://localhost:3001/api',
                 headers: { 'Authorization': `Bearer ${authToken}` }
             });
-            // Calling the correct endpoint to start a task
             await api.post(`/applications/${task.id}/start`);
             alert(`Task '${task.title}' has been started!`);
             setIsMyTaskDetailModalOpen(false);
-            // You might want to refresh the dashboard data here later
         } catch (apiError) {
             console.error("Error starting task:", apiError);
             alert(`Failed to start task '${task.title}'. ${apiError.response?.data?.message || ''}`);
         }
     };
 
-    const handleWithdrawTask = async (task) => {
+    const handleWithdrawTask = async (task) => { // 'task' is the simplified object from the modal
         if (window.confirm(`Are you sure you want to withdraw from ${task.title}?`)) {
             try {
                 const authToken = localStorage.getItem('authToken');
@@ -301,11 +282,28 @@ function ApplicantDashboard() {
                     baseURL: 'http://localhost:3001/api',
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
-                // Calling the correct endpoint to withdraw an application
+    
+                // This API call is correct and works.
                 await api.post(`/applications/${task.id}/withdraw`);
                 alert(`Successfully withdrew from '${task.title}'.`);
+    
+                // --- THIS IS THE FIX ---
+                // Instead of moving the simplified 'task' object, we find the original,
+                // complete application object from our 'activeApplications' state.
+                const applicationToMove = activeApplications.find(app => app.ApplicationID === task.id);
+    
+                if (applicationToMove) {
+                    // 1. Remove the application from the active list
+                    setActiveApplications(prev => prev.filter(app => app.ApplicationID !== task.id));
+    
+                    // 2. Add the complete application object to the historical list,
+                    // ensuring its status is updated to 'Withdrawn' for immediate UI feedback.
+                    setHistoricalApplications(prev => [...prev, { ...applicationToMove, Status: 'Withdrawn' }]);
+                }
+                
+                // Close the modal
                 setIsMyTaskDetailModalOpen(false);
-                // You might want to refresh the dashboard data here later
+    
             } catch (apiError) {
                 console.error("Error withdrawing from task:", apiError);
                 alert(`Failed to withdraw from task '${task.title}'. ${apiError.response?.data?.message || ''}`);
@@ -316,6 +314,7 @@ function ApplicantDashboard() {
 
     return (
         <div className="applicant-dashboard-container min-h-screen">
+            {/* The header section is unchanged */}
             <div className="applicant-dashboard-header flex items-center">
                 <h1 className="applicant-taskpay-title text-[32px] tracking-[3px] font-bold">Task<span>Pay</span></h1>
                 <div className="applicant-dashboard-name-img-container flex flex-row leading-[15px]">
@@ -331,6 +330,7 @@ function ApplicantDashboard() {
             </div>
 
             <div className="applicant-dashboard-body-container flex flex-row">
+                {/* The "My Profile" section is unchanged */}
                 <div className="my-profile-container">
                     <div className="my-profile-header flex flex-column items-center">
                         <svg width="33" height="34" viewBox="0 0 33 34" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -351,39 +351,32 @@ function ApplicantDashboard() {
                             <div className="id-container items-center justify-items-center">
                                 <h2>ID: APP-2025-{String(applicantProfile.Applicant_ID || '000').padStart(3, '0')}</h2>
                             </div>
-
                             <div className="my-profile-info">
                                 <div className="profile-row"> <p>Full Name: </p><p className="profile-value">{getFullName(applicantProfile)}</p></div>
                                 <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
                                 </svg>
-
                                 <div className="profile-row"><p>Sex: </p><p className="profile-value">{applicantProfile.Sex || 'N/A'}</p></div>
                                 <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
                                 </svg>
-
                                 <div className="profile-row"><p>Civil Status: </p><p className="profile-value"> {applicantProfile.CivilStatus || 'N/A'}</p></div>
                                 <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
                                 </svg>
-
                                 <div className="profile-row"><p>Date of Birth: </p><p className="profile-value">{applicantProfile.DoB || 'N/A'}</p></div>
                                 <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
                                 </svg>
-
                                 <div className="profile-row"><p>Address: </p><p className="profile-value">{applicantProfile.Address || 'N/A'}</p></div>
                                 <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
                                 </svg>
-
                                 <div className="profile-row"><p>Email: </p><p className="profile-value">{applicantProfile.Email || 'N/A'}</p></div>
                                 <svg width="340" height="1" viewBox="0 0 358 1" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <line y1="0.5" x2="358" y2="0.5" stroke="#5A5A5A" strokeOpacity="0.04"/>
                                 </svg>
                             </div>
-
                             <div className="edit-profile-container" onClick={() => navigate("/applicant-edit-profile") }><p className="edit-profile-text">Edit Profile</p></div>
                         </div>
                     ) : (
@@ -398,27 +391,12 @@ function ApplicantDashboard() {
                         </svg>
                     </div>
 
-                    {taskApplications.length > 0 ? taskApplications.map((application) => (
+                    {/* --- CHANGE 7: The main list now maps over `activeApplications` --- */}
+                    {activeApplications.length > 0 ? activeApplications.map((application) => (
                         <TaskApplicationStatus
                             key={application.ApplicationID}
-                            jobTitle={application.TaskDetails?.Title || 'N/A'}
-                            applicationDate={application.ApplicationDate ? new Date(application.ApplicationDate).toLocaleDateString() : 'N/A'}
-                            salary={application.TaskDetails?.Budget || 'N/A'}
-                            clientName={application.TaskDetails?.ClientName || 'N/A'}
-                            applicationStatus={application.Status || 'N/A'}
-                            onView={() => handleViewAnyTaskDetail({
-                                id: application.ApplicationID,
-                                title: application.TaskDetails?.Title || 'N/A',
-                                description: application.TaskDetails?.Description || 'No description available.',
-                                budget: application.TaskDetails?.Budget || 0,
-                                posted: application.TaskDetails?.PostedDate ? new Date(application.TaskDetails.PostedDate).toLocaleDateString() : 'N/A',
-                                deadline: application.TaskDetails?.DeadlineDate ? new Date(application.TaskDetails.DeadlineDate).toLocaleDateString() : 'N/A',
-                                duration: application.TaskDetails?.Duration || 'N/A',
-                                applicants: application.TaskDetails?.ApplicantsCount || 0,
-                                client: application.TaskDetails?.ClientName || 'N/A',
-                                category: application.TaskDetails?.Category || 'N/A',
-                                status: application.Status || 'N/A',
-                            })}
+                            application={application}
+                            onView={() => handleViewAnyTaskDetail(application)}
                         />
                     )) : (
                         <p>You have no active task applications.</p>
@@ -435,8 +413,9 @@ function ApplicantDashboard() {
                     <h1 className="font-bold text-[24px]">Apply for New Task</h1>
                     <p className="text-[14px]">Browse available tasks and submit your application</p>
                 </div>
-
-                <div className="view-container cursor-pointer" onClick={handleViewTaskHistoryClick}>
+                
+                {/* --- CHANGE 8: The onClick for task history now simply opens the modal --- */}
+                <div className="view-container cursor-pointer" onClick={() => setIsTaskHistoryModalOpen(true)}>
                     <svg width="81" height="80" viewBox="0 0 81 80" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M73.8334 73.3333H7.16675C5.80008 73.3333 4.66675 72.1999 4.66675 70.8333C4.66675 69.4666 5.80008 68.3333 7.16675 68.3333H73.8334C75.2001 68.3333 76.3334 69.4666 76.3334 70.8333C76.3334 72.1999 75.2001 73.3333 73.8334 73.3333Z" fill="#FEC400"/>
                         <path d="M33 13.3334V73.3334H48V13.3334C48 9.66675 46.5 6.66675 42 6.66675H39C34.5 6.66675 33 9.66675 33 13.3334Z" fill="#FEC400"/>
@@ -458,8 +437,8 @@ function ApplicantDashboard() {
             </div>
 
             {/* --- Modals --- */}
+            {/* All modals and their content are unchanged */}
 
-            {/* Task Detail Modal (reused for My Task Application and Available Tasks 'View') */}
             <Modal
                 isOpen={isMyTaskDetailModalOpen}
                 onClose={handleCloseModal(setIsMyTaskDetailModalOpen)}
@@ -469,7 +448,6 @@ function ApplicantDashboard() {
             >
                 {currentViewedTask && (
                     <div className="task-detail-modal">
-                        {/* HEADER DETAILS (matching Figma) */}
                         <div className="detail-header-info">
                             <div className="detail-client-info">
                                 Client: <span className="client-initials">{getClientInitials(currentViewedTask.client)}</span>
@@ -482,145 +460,100 @@ function ApplicantDashboard() {
                             </div>
                         </div>
 
-                        {/* STATS SECTION (matching Figma) */}
                         <div className="detail-task-stats-grid">
                             <div className="stat-box">
-                                {/* REMOVED: <i className="icon-budget-detail"></i> */}
                                 <span>P{currentViewedTask.budget}</span>
                                 <span className="stat-label">Budget</span>
                             </div>
                             <div className="stat-box">
-                                {/* REMOVED: <i className="icon-duration-detail"></i> */}
                                 <span>{currentViewedTask.duration || 'N/A'}</span>
                                 <span className="stat-label">Duration</span>
                             </div>
                             <div className="stat-box">
-                                {/* REMOVED: <i className="icon-applicants-detail"></i> */}
                                 <span>{currentViewedTask.applicants}</span>
                                 <span className="stat-label">Applicants</span>
                             </div>
                         </div>
 
-                        {/* TASK DESCRIPTION */}
                         <h4 className="task-description-header"><i className="icon-description-detail"></i> Task Description</h4>
                         <p className="task-description-text">{currentViewedTask.description}</p>
 
-                        {/* Conditional buttons remain the same, as their logic is already there */}
-                        {taskApplications.some(app => app.ApplicationID === currentViewedTask.id) && currentViewedTask.status === 'Approved' && ( /* Only show Start/Withdraw if Approved */
-                            <div className="modal-actions">
-                                <button className="start-task-button" onClick={() => handleStartTask(currentViewedTask)}>Start Task</button>
-                                <button className="withdraw-button" onClick={() => handleWithdrawTask(currentViewedTask)}>Withdraw</button>
-                            </div>
-                        )}
-                        {availableTasks.some(task => task.TaskID === currentViewedTask.id) && ( /* TaskID for available tasks */
-                            <div className="modal-actions">
-                                <button className="apply-button" onClick={() => handleApplyTask(currentViewedTask)}>Apply</button>
-                            </div>
-                        )}
-                        {/* History items (Rejected, Withdrawn, Completed) usually don't have active buttons */}
-                        {taskHistory.some(historyItem => historyItem.ApplicationID === currentViewedTask.id) && (
-                            <div className="modal-actions">
-                                {/* No action buttons for historical items in Figma, but you can add if needed */}
-                            </div>
-                        )}
+                        <div className="modal-actions">
+                            {(currentViewedTask.status === 'Pending' || currentViewedTask.status === 'Approved') && (
+                                <button
+                                    className="withdraw-button"
+                                    onClick={() => handleWithdrawTask(currentViewedTask)}
+                                >
+                                Withdraw Application
+                                </button>
+                            )}
+
+                            {currentViewedTask.status === 'Approved' && (
+                                <button
+                                    className="start-task-button"
+                                    onClick={() => handleStartTask(currentViewedTask)}
+                                >
+                                Start Task
+                                </button>
+                            )}
+    
+                            {currentViewedTask.status === 'InProgress' && (
+                                <button className="update-progress-button">
+                                Submit for Review
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
             </Modal>
 
-            {/* Apply for New Task Modal */}
             <Modal
                 isOpen={isApplyForNewTaskModalOpen}
                 onClose={() => {
                     setIsApplyForNewTaskModalOpen(false);
-                    setSubmissionStatus({ message: '', isError: false }); // This resets the message
+                    setSubmissionStatus({ message: '', isError: false });
                 }}
                 title="Available Tasks"
                 zIndex={1001} 
->
-            {/* CHANGE #2: Add this block to display the message */}
-            {submissionStatus.message && (
-                <div className={submissionStatus.isError ? 'status-message error' : 'status-message success'}>
-                    {submissionStatus.message}
-                </div>
-            )}
-
-            <div className="available-tasks-list">
-                {availableTasks.length > 0 ? (
-                    availableTasks.map(task => (
-                        <AvailableTaskItem
-                            key={task.TaskID}
-                            task={task}
-                            onView={handleViewAnyTaskDetail}
-                            onApply={handleApplyTask}
-                        />
-                    ))
-                ) : (
-                    <p>There are currently no available tasks.</p>
-                )}
-                {/* We can hide pagination if there are no tasks */}
-                {availableTasksTotalPages > 0 && ( // Only show pagination if there's more than 1 page
-                    <div className="pagination">
-                        <button
-                            onClick={() => fetchAvailableTasks(availableTasksCurrentPage - 1)}
-                            disabled={availableTasksCurrentPage === 1}
-                        >
-                            Previous
-                        </button>
-                        {[...Array(availableTasksTotalPages)].map((_, index) => (
-                            <span
-                                key={index + 1}
-                                className={availableTasksCurrentPage === index + 1 ? 'active' : ''}
-                                onClick={() => fetchAvailableTasks(index + 1)}
-                            >
-                                {index + 1}
-                            </span>
-                        ))}
-                        <button
-                            onClick={() => fetchAvailableTasks(availableTasksCurrentPage + 1)}
-                            disabled={availableTasksCurrentPage === availableTasksTotalPages}
-                        >
-                            Next
-                        </button>
+            >
+                {submissionStatus.message && (
+                    <div className={submissionStatus.isError ? 'status-message error' : 'status-message success'}>
+                        {submissionStatus.message}
                     </div>
                 )}
-            </div>
-            </Modal>
-
-            {/* View Task History Modal */}
-            <Modal
-                isOpen={isTaskHistoryModalOpen}
-                onClose={handleCloseModal(setIsTaskHistoryModalOpen)}
-                title="Task History"
-                zIndex={1001}
-            >
-                <div className="task-history-list">
-                    {taskHistory.map(task => (
-                        <TaskHistoryItem
-                            key={task.id}
-                            task={task}
-                            onView={handleViewAnyTaskDetail}
-                        />
-                    ))}
-                    {taskHistoryTotalPages > 0 && ( // Only show pagination if there's more than 1 page
+                <div className="available-tasks-list">
+                    {availableTasks.length > 0 ? (
+                        availableTasks.map(task => (
+                            <AvailableTaskItem
+                                key={task.TaskID}
+                                task={task}
+                                onView={handleViewAnyTaskDetail}
+                                onApply={handleApplyTask}
+                            />
+                        ))
+                    ) : (
+                        <p>There are currently no available tasks.</p>
+                    )}
+                    {availableTasksTotalPages > 0 && (
                         <div className="pagination">
                             <button
-                                onClick={() => fetchTaskHistory(taskHistoryCurrentPage - 1)}
-                                disabled={taskHistoryCurrentPage === 1}
+                                onClick={() => fetchAvailableTasks(availableTasksCurrentPage - 1)}
+                                disabled={availableTasksCurrentPage === 1}
                             >
                                 Previous
                             </button>
-                            {[...Array(taskHistoryTotalPages)].map((_, index) => (
+                            {[...Array(availableTasksTotalPages)].map((_, index) => (
                                 <span
                                     key={index + 1}
-                                    className={taskHistoryCurrentPage === index + 1 ? 'active' : ''}
-                                    onClick={() => fetchTaskHistory(index + 1)}
+                                    className={availableTasksCurrentPage === index + 1 ? 'active' : ''}
+                                    onClick={() => fetchAvailableTasks(index + 1)}
                                 >
                                     {index + 1}
                                 </span>
                             ))}
                             <button
-                                onClick={() => fetchTaskHistory(taskHistoryCurrentPage + 1)}
-                                disabled={taskHistoryCurrentPage === taskHistoryTotalPages}
+                                onClick={() => fetchAvailableTasks(availableTasksCurrentPage + 1)}
+                                disabled={availableTasksCurrentPage === availableTasksTotalPages}
                             >
                                 Next
                             </button>
@@ -629,7 +562,29 @@ function ApplicantDashboard() {
                 </div>
             </Modal>
 
-            {/* My Documents Modal */}
+            {/* --- CHANGE 9: The Task History modal now maps over `historicalApplications` --- */}
+            <Modal
+                isOpen={isTaskHistoryModalOpen}
+                onClose={handleCloseModal(setIsTaskHistoryModalOpen)}
+                title="Task History"
+                zIndex={1001}
+            >
+                <div className="task-history-list">
+                    {historicalApplications.length > 0 ? (
+                        historicalApplications.map(application => (
+                            <TaskHistoryItem
+                                key={application.ApplicationID}
+                                task={application}
+                                onView={() => handleViewAnyTaskDetail(application)}
+                            />
+                        ))
+                    ) : (
+                        <p>You have no items in your task history.</p>
+                    )}
+                    {/* The pagination for history has been removed to simplify */}
+                </div>
+            </Modal>
+
             <Modal
                 isOpen={isMyDocumentsModalOpen}
                 onClose={handleCloseModal(setIsMyDocumentsModalOpen)}

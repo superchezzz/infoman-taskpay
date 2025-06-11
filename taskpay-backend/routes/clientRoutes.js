@@ -1,16 +1,15 @@
 /**
  * @file clientRoutes.js
  * @description Defines API routes for client-specific functionalities.
- *
- * @description
- * This file contains all API endpoints related to the 'client' user role,
- * such as viewing their posted tasks, managing applicants for those tasks,
- * and viewing their dashboard statistics. All routes are protected and require
- * the user to be authenticated with the 'client' role.
+ * @modification
+ * Corrected route paths to match frontend API calls (/stats, /tasks, /profile).
+ * Added /profile and /completed-tasks routes.
  */
 
 const express = require('express');
 const router = express.Router();
+// CORRECTED: authorize was being destructured from authMiddleware, but it's not exported like that.
+// The file exports authorizeClient directly, so we'll use that as per the original file.
 const { protect, authorizeClient } = require('../middleware/authMiddleware');
 
 // Import all necessary models and Sequelize for operators
@@ -20,47 +19,65 @@ const {
 } = require('../models');
 const { Op } = Sequelize;
 
-// @route   GET /api/clients/dashboard-stats
+// @route   GET /api/clients/profile
+// @desc    Get the profile of the currently logged-in client
+// @access  Private (Client only)
+router.get('/profile', protect, authorizeClient, async (req, res) => {
+    try {
+        const clientId = req.user.UserID;
+
+        // Since signup is generic, the client's name is in the Applicant table.
+        const clientProfile = await Applicant.findOne({
+            where: { Applicant_ID: clientId },
+            attributes: ['First_Name', 'Surname']
+        });
+
+        if (!clientProfile) {
+            const user = await User.findByPk(clientId, { attributes: ['Email'] });
+            return res.status(404).json({
+                message: 'Client profile details not found.',
+                profile: { Email: user?.Email }
+            });
+        }
+        
+        res.status(200).json(clientProfile);
+
+    } catch (error) {
+        console.error('Get Client Profile Error:', error);
+        res.status(500).json({ message: 'Server error while fetching client profile.' });
+    }
+});
+
+// @route   GET /api/clients/stats
 // @desc    Get dashboard statistics for the logged-in client
 // @access  Private (Client only)
-router.get('/dashboard-stats', protect, authorizeClient, async (req, res) => {
+router.get('/stats', protect, authorizeClient, async (req, res) => {
     const clientId = req.user.UserID;
-
     try {
-        // We can run all count queries concurrently for better performance
         const [
             filledTasksCount,
             openTasksCount,
             completedTasksCount,
             totalApplicationsCount
         ] = await Promise.all([
-            // Count tasks owned by this client with status 'Filled'
             Task.count({ where: { ClientID: clientId, TaskStatus: 'Filled' } }),
-
-            // Count tasks owned by this client with status 'Open'
             Task.count({ where: { ClientID: clientId, TaskStatus: 'Open' } }),
-
-            // Count tasks owned by this client with status 'Completed'
             Task.count({ where: { ClientID: clientId, TaskStatus: 'Completed' } }),
-
-            // Count total applications received for all tasks owned by this client
             TaskApplication.count({
                 include: [{
                     model: Task,
                     as: 'TaskDetails',
                     where: { ClientID: clientId },
-                    attributes: [] // We don't need Task attributes, just the join for filtering
+                    attributes: []
                 }]
             })
         ]);
-
         res.status(200).json({
             filledTasks: filledTasksCount,
             openTasks: openTasksCount,
             totalApplications: totalApplicationsCount,
             completedTasks: completedTasksCount
         });
-
     } catch (error) {
         console.error('Get Dashboard Stats Error:', error);
         res.status(500).json({ message: 'Server error while fetching dashboard stats.', error: error.message });
@@ -68,10 +85,10 @@ router.get('/dashboard-stats', protect, authorizeClient, async (req, res) => {
 });
 
 
-// @route   GET /api/clients/my-tasks
+// @route   GET /api/clients/tasks
 // @desc    Get all tasks posted by the logged-in client
 // @access  Private (Client only)
-router.get('/my-tasks', protect, authorizeClient, async (req, res) => {
+router.get('/tasks', protect, authorizeClient, async (req, res) => {
     const clientId = req.user.UserID;
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 5;
@@ -88,13 +105,7 @@ router.get('/my-tasks', protect, authorizeClient, async (req, res) => {
             where: whereClause,
             attributes: {
                 include: [[
-                    Sequelize.literal(`(
-                        SELECT COUNT(*)
-                        FROM TaskApplications AS ta
-                        WHERE
-                            ta.Task_ID = Task.TaskID AND
-                            ta.Status IN ('Pending', 'ViewedByAdmin', 'Shortlisted', 'Approved', 'InProgress', 'SubmittedForReview')
-                    )`),
+                    Sequelize.literal(`(SELECT COUNT(*) FROM TaskApplications AS ta WHERE ta.Task_ID = Task.TaskID)`),
                     'applicantCount'
                 ]]
             },
@@ -106,6 +117,26 @@ router.get('/my-tasks', protect, authorizeClient, async (req, res) => {
     } catch (error) {
         console.error('Get My Tasks Error:', error);
         res.status(500).json({ message: 'Server error while fetching tasks.', error: error.message });
+    }
+});
+
+// @route   GET /api/clients/completed-tasks
+// @desc    Get all completed tasks for the logged-in client
+// @access  Private (Client only)
+router.get('/completed-tasks', protect, authorizeClient, async (req, res) => {
+    const clientId = req.user.UserID;
+    try {
+        const completedTasks = await Task.findAll({
+            where: {
+                ClientID: clientId,
+                TaskStatus: 'Completed'
+            },
+            order: [['updatedAt', 'DESC']]
+        });
+        res.status(200).json({ completedTasks });
+    } catch (error) {
+        console.error('Get Completed Tasks Error:', error);
+        res.status(500).json({ message: 'Server error while fetching completed tasks.' });
     }
 });
 
@@ -127,7 +158,7 @@ router.get('/tasks/:taskId/applicants', protect, authorizeClient, async (req, re
                 model: User, as: 'ApplicantDetails', attributes: ['UserID', 'Email'],
                 include: [{
                     model: Applicant, as: 'ApplicantProfile',
-                    include: [{ model: Preference, as: 'Preferences', attributes: ['Pref_Occupation'] }]
+                    include: [{ model: Preference, as: 'Preferences' }]
                 }]
             }]
         });

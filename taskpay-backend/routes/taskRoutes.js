@@ -20,32 +20,24 @@ const { Op } = Sequelize;
 router.post('/', protect, authorizeClient, async (req, res) => {
     const { Title, Description, Budget, Category, Location, Deadline, Duration } = req.body;
 
-    // Basic Validation
     if (!Title || !Description || !Category) {
-        return res.status(400).json({ message: 'Please provide a Title, Description, and Category for the task.' });
+        return res.status(400).json({ message: 'Please provide a Title, Description, and Category.' });
     }
 
     try {
         const clientId = req.user.UserID;
-        // Find the user's name to associate with the task posting
-        const clientUser = await User.findByPk(clientId, {
-            include: {
-                model: Applicant, // A user's name info is in their Applicant profile
-                as: 'ApplicantProfile',
-                attributes: ['First_Name', 'Surname']
-            }
-        });
+        // Find the user to get their email as a consistent ClientName
+        const clientUser = await User.findByPk(clientId);
 
-        // Construct a client name. Defaults to user email if no profile name exists.
-        const clientName = clientUser?.ApplicantProfile
-            ? `${clientUser.ApplicantProfile.First_Name} ${clientUser.ApplicantProfile.Surname}`
-            : clientUser.Email;
+        // CORRECTED: Use the user's email as the ClientName.
+        // This is more reliable than assuming a client has an Applicant profile.
+        const clientName = clientUser.Email;
 
         const newTask = await Task.create({
             ClientID: clientId,
-            ClientName: clientName,
+            ClientName: clientName, // Now reliably set to the user's email
             Title, Description, Budget, Category, Location, Deadline, Duration,
-            TaskStatus: 'Open' // New tasks are always 'Open' by default
+            TaskStatus: 'Open'
         });
 
         res.status(201).json({ message: 'Task created successfully.', task: newTask });

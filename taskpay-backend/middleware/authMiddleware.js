@@ -3,16 +3,18 @@
  * @description Middleware for authentication (verifying JWT) and authorization (checking roles).
  *
  * @modification
- * Added the 'authorizeClient' middleware function to check if the authenticated user
- * possesses the 'client' role. This will be used to protect client-specific endpoints.
+ * - Added a generic `authorize` function to reduce code repetition.
+ * - Added the required `authorizeApplicant` middleware.
+ * - Improved the `protect` function to efficiently load user roles with the user object.
  */
 
 const jwt = require('jsonwebtoken');
-const { User, Role } = require('../models'); // Updated to use centralized model imports
+const { User, Role } = require('../models');
+// dotenv config is usually only needed in the main server file, but leaving it for safety.
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
 
-// 'protect' middleware remains the same, it verifies the token and attaches the user
+// 'protect' middleware verifies the token and attaches the user with their roles
 const protect = async (req, res, next) => {
     let token;
 
@@ -26,8 +28,16 @@ const protect = async (req, res, next) => {
             }
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+            // --- IMPROVEMENT ---
+            // Fetch the user AND their associated roles in a single query.
+            // This is more efficient than calling user.getRoles() in every authorization middleware.
             req.user = await User.findByPk(decoded.id, {
-                attributes: { exclude: ['PasswordHash'] }
+                attributes: { exclude: ['PasswordHash'] },
+                include: [{
+                    model: Role,
+                    as: 'Roles',
+                    attributes: ['RoleName'] // We only need the role names
+                }]
             });
 
             if (!req.user) {
@@ -45,54 +55,38 @@ const protect = async (req, res, next) => {
     }
 };
 
-// 'authorizeAdmin' middleware remains the same
-const authorizeAdmin = async (req, res, next) => {
-    if (req.user) {
-        try {
-            const roles = await req.user.getRoles();
-            const isAdmin = roles.some(role => role.RoleName === 'admin');
-
-            if (isAdmin) {
-                next();
-            } else {
-                res.status(403).json({ message: 'Forbidden: Not authorized as an admin.' });
-            }
-        } catch (error) {
-            console.error("Admin authorization error:", error);
-            res.status(500).json({ message: "Server error during admin authorization." });
-        }
-    } else {
-        res.status(401).json({ message: 'Not authorized, user not identified.' });
-    }
-};
-
 /**
- * @function authorizeClient
- * @description Middleware to authorize client users.
- * Should be used AFTER the 'protect' middleware.
+ * @function authorize
+ * @description Generic authorization middleware generator.
+ * @param {...string} allowedRoles - A list of role names that are allowed access.
  */
-const authorizeClient = async (req, res, next) => {
-    if (req.user) {
-        try {
-            // Get all roles associated with the authenticated user
-            const roles = await req.user.getRoles();
-            // Check if one of the roles is 'client'
-            const isClient = roles.some(role => role.RoleName === 'client');
-
-            if (isClient) {
-                next(); // User has the client role, proceed
-            } else {
-                res.status(403).json({ message: 'Forbidden: Not authorized as a client.' });
-            }
-        } catch (error) {
-            console.error("Client authorization error:", error);
-            res.status(500).json({ message: "Server error during client authorization." });
+const authorize = (...allowedRoles) => {
+    return (req, res, next) => {
+        // The `protect` middleware should have already attached req.user with Roles
+        if (!req.user || !req.user.Roles) {
+            return res.status(401).json({ message: 'Not authorized, user data is incomplete.' });
         }
-    } else {
-        // This case should be caught by 'protect' middleware first
-        res.status(401).json({ message: 'Not authorized, user not identified.' });
-    }
+
+        const hasRole = req.user.Roles.some(role => allowedRoles.includes(role.RoleName));
+
+        if (hasRole) {
+            next(); // User has a required role, proceed
+        } else {
+            res.status(403).json({ message: 'Forbidden: You do not have the required permissions to access this resource.' });
+        }
+    };
 };
 
+// Create specific middleware functions using the generic generator for consistency
+const authorizeAdmin = authorize('admin');
+const authorizeClient = authorize('client');
+const authorizeApplicant = authorize('applicant'); // This is the new function we needed
 
-module.exports = { protect, authorizeAdmin, authorizeClient };
+
+module.exports = {
+    protect,
+    authorize, // Exporting the generator is good practice
+    authorizeAdmin,
+    authorizeClient,
+    authorizeApplicant // Now we export the applicant authorizer
+};

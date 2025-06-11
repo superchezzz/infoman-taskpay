@@ -1,81 +1,39 @@
-import React from "react";
-import "./taskApplicationStatus.css";
+import React from 'react';
+import './taskApplicationStatus.css';
 
-export const taskApplicationStatus = ({
-  jobTitle,
-  applicationDate,
-  salary,
-  clientName,
-  applicationStatus,
-}) => {
+// Note: It's a React convention to name components with PascalCase (e.g., TaskApplicationStatus)
+// but we will stick to your original naming to avoid breaking imports.
+const taskApplicationStatus = ({ application, onView }) => {
+  // Props are now the entire 'application' object and the 'onView' function
+
+  // Helper function to get a CSS class from the status string
   const getStatusPillClass = (status) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return "status-pill status-pending";
-      case "approved":
-        return "status-pill status-approved";
-      case "in progress":
-        return "status-pill status-in-progress";
-      case "completed":
-        return "status-pill status-completed";
-      default:
-        return "status-pill";
-    }
-  };
-
-  const renderActionButtons = (status) => {
-    switch (status.toLowerCase()) {
-      case "pending":
-        return (
-          <>
-            <button className="card-button view-button">View</button>
-            <button className="card-button withdraw-button">Withdraw</button>
-          </>
-        );
-      case "approved":
-        return (
-          <>
-            <button className="card-button view-button">View</button>
-            <button className="card-button start-task-button">Start Task</button>
-          </>
-        );
-      case "in progress":
-        return (
-          <>
-            <button className="card-button view-button">View</button>
-            <button className="card-button update-progress-button">Update Progress</button>
-          </>
-        );
-      case "completed":
-        return (
-          <>
-            <button className="card-button view-button">View</button>
-            <button className="card-button complete-button">Complete</button>
-          </>
-        );
-      default:
-        return <button className="card-button view-button">View</button>;
-    }
+    const statusClass = status ? status.toLowerCase().replace(/\s+/g, '-') : 'unknown';
+    return `status-pill status-${statusClass}`;
   };
 
   return (
     <div className="task-application-status-card">
       <div className="card-header">
-        <h3 className="job-title">{jobTitle}</h3>
-        <span className={getStatusPillClass(applicationStatus)}>
-          {applicationStatus}
+        <h3 className="job-title">{application.TaskDetails?.Title || 'N/A'}</h3>
+        {/* The status pill is now the primary status indicator */}
+        <span className={getStatusPillClass(application.Status)}>
+          {application.Status || 'Unknown'}
         </span>
       </div>
 
       <div className="card-details">
         <p className="details-text">
-          Applied: {applicationDate} • Budget: ₱{salary}
+          Applied: {new Date(application.ApplicationDate).toLocaleDateString()} • Budget: ₱{application.TaskDetails?.Budget || '0.00'}
         </p>
-        <p className="details-text">Client: {clientName}</p>
+        <p className="details-text">Client: {application.TaskDetails?.ClientName || 'N/A'}</p>
       </div>
 
       <div className="card-actions">
-        {renderActionButtons(applicationStatus)}
+        {/* We now only have one button, and it gets its action from the 'onView' prop */}
+        <button className="card-button view-button" onClick={onView}>
+          View
+        </button>
       </div>
     </div>
   );

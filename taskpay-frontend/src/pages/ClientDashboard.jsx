@@ -8,6 +8,69 @@ import axios from 'axios'; // Import axios
 
 const API_BASE_URL = 'http://localhost:3001/api'; // Your backend API base URL
 
+const EditTaskModal = ({ task, onClose, onUpdate }) => {
+    const [formData, setFormData] = useState({
+        // Pre-fill form with existing task data
+        Title: task.jobTitle,
+        Description: task.description,
+        Budget: task.budget,
+        Location: task.location,
+        Deadline: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+    });
+
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onUpdate(task.id, formData); // Pass the updated data to the handler
+    };
+
+    return (
+        <div className="modal-overlay">
+            <div className="edit-modal-content">
+                <h2>Edit Task</h2>
+                <form onSubmit={handleSubmit}>
+                    {/* Job Title remains on its own line */}
+                    <div className="form-group">
+                        <label htmlFor="Title">Job Title</label>
+                        <input id="Title" type="text" value={formData.Title} onChange={handleChange} required />
+                    </div>
+
+                    {/* NEW: A wrapper div for the horizontal row */}
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label htmlFor="Budget">Budget</label>
+                            <input id="Budget" type="number" value={formData.Budget} onChange={handleChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="Deadline">Deadline</label>
+                            <input id="Deadline" type="date" value={formData.Deadline} onChange={handleChange} required />
+                        </div>
+                        <div className="form-group">
+                            <label htmlFor="Location">Location</label>
+                            <input id="Location" type="text" value={formData.Location} onChange={handleChange} required />
+                        </div>
+                    </div>
+
+                    {/* Description remains on its own line */}
+                    <div className="form-group">
+                        <label htmlFor="Description">Description</label>
+                        <textarea id="Description" value={formData.Description} onChange={handleChange} required />
+                    </div>
+                    
+                    <div className="form-actions">
+                        <button type="submit" className="update-task-button">Update Task</button>
+                        <button type="button" className="cancel-button" onClick={onClose}>Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 function ClientDashboard() {
     // --- State Management ---
     const [clientProfile, setClientProfile] = useState(null);
@@ -41,6 +104,10 @@ function ClientDashboard() {
     const [showApplicantsModal, setShowApplicantsModal] = useState(false);
     const [selectedTaskForApplicants, setSelectedTaskForApplicants] = useState(null);
 
+    // Modal for editing tasks
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [taskToEdit, setTaskToEdit] = useState(null);
+
     // Helper function for header initials
     const getInitials = useCallback((name = '') => {
         const parts = name.split(' ');
@@ -57,7 +124,7 @@ function ClientDashboard() {
         setIsLoading(true);
         setError(null);
 
-        const authToken = localStorage.getItem('authToken');
+        const authToken = sessionStorage.getItem('authToken');
         if (!authToken) {
             setError('Authentication required. Please log in.');
             setIsLoading(false);
@@ -148,23 +215,44 @@ function ClientDashboard() {
     }, []);
 
     const handleHireApplicant = useCallback(async (taskId, applicantId, applicantName) => {
-        const authToken = localStorage.getItem('authToken');
-        if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
+        // --- ADD THIS LOG ---
+        console.log("handleHireApplicant triggered!");
+        console.log("Attempting to hire:", { taskId, applicantId, applicantName });
+        // --- END LOG ---
+
+        const authToken = sessionStorage.getItem('authToken');
+        if (!authToken) {
+            alert('Authentication required.');
+            navigate('/login');
+            // --- ADD THIS LOG ---
+            console.log("No authToken, redirecting.");
+            // --- END LOG ---
+            return;
+        }
+
         const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
         try {
+            // --- ADD THIS LOG (just before the API call) ---
+            console.log("Making API call to hire applicant...");
+            // --- END LOG ---
             const response = await api.put(`/client/tasks/${taskId}/hire`, { applicantId });
+            // --- ADD THIS LOG ---
+            console.log("Hire API call successful:", response.data);
+            // --- END LOG ---
             alert(response.data.message);
-            fetchDashboardData(); // Refresh all data to reflect changes
+            fetchDashboardData();
             setShowApplicantsModal(false);
         } catch (error) {
-            console.error('Error hiring applicant:', error.response ? error.response.data : error.message);
+            // --- ADD THIS LOG ---
+            console.error('Hire API call failed. Error object:', error);
+            // --- END LOG ---
             alert(`Failed to hire applicant: ${error.response?.data?.message || 'Please try again.'}`);
         }
     }, [navigate, fetchDashboardData]);
 
     const handleMarkAsFilled = useCallback(async (taskId) => {
-        const authToken = localStorage.getItem('authToken');
+        const authToken = sessionStorage.getItem('authToken');
         if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
         const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
@@ -179,7 +267,7 @@ function ClientDashboard() {
     }, [navigate, fetchDashboardData]);
 
     const handleReopenJob = useCallback(async (taskId) => {
-        const authToken = localStorage.getItem('authToken');
+        const authToken = sessionStorage.getItem('authToken');
         if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
         const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
@@ -193,9 +281,11 @@ function ClientDashboard() {
         }
     }, [navigate, fetchDashboardData]);
 
+    
+
     const handleDeleteJob = useCallback(async (taskId, jobTitle) => {
         if (!window.confirm(`Are you sure you want to delete "${jobTitle}"? This action cannot be undone.`)) { return; }
-        const authToken = localStorage.getItem('authToken');
+        const authToken = sessionStorage.getItem('authToken');
         if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
         const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
@@ -209,6 +299,29 @@ function ClientDashboard() {
         }
     }, [navigate, fetchDashboardData]);
 
+    const handleOpenEditModal = (task) => {
+        setTaskToEdit(task);
+        setIsEditModalOpen(true);
+    };
+
+    const handleCloseEditModal = () => {
+        setTaskToEdit(null);
+        setIsEditModalOpen(false);
+    };
+
+    const handleUpdateTask = async (taskId, updatedData) => {
+        const authToken = sessionStorage.getItem('authToken');
+        const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
+        try {
+            await api.put(`/tasks/${taskId}`, updatedData);
+            alert('Task updated successfully!');
+            handleCloseEditModal();
+            fetchDashboardData(); // Refresh data to show changes
+        } catch (error) {
+            alert(`Failed to update task: ${error.response?.data?.message || 'Please try again.'}`);
+        }
+    };
+
     const handlePostTask = useCallback(async (e) => {
         e.preventDefault();
 
@@ -221,7 +334,7 @@ function ClientDashboard() {
             location,
         };
 
-        const authToken = localStorage.getItem('authToken');
+        const authToken = sessionStorage.getItem('authToken');
         if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
         const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
@@ -310,11 +423,11 @@ function ClientDashboard() {
                         {filteredTasks.length > 0 ? (
                             filteredTasks.map(task => ( // Use filteredTasks here
                                 <div key={task.id} className={`task-card ${task.status === 'filled' ? 'filled-task' : task.status === 'closed' ? 'closed-task' : 'open-task'}`}>
-                                    <h3>{task.jobTitle}
-                                        {task.status === 'closed' && <span className="status-badge closed">Closed</span>}
-                                        {task.status === 'filled' && <span className="status-badge filled">Filled</span>}
-                                        {task.status === 'open' && <span className="status-badge open">Active</span>}
-                                    </h3>
+                                    <h3>{task.jobTitle}</h3> {/* H3 now only contains the job title */}
+                                    {/* NEW: Status badge moved outside H3 and given a specific class for positioning */}
+                                    {task.status === 'closed' && <span className="status-badge closed task-card-status">Closed</span>}
+                                    {task.status === 'filled' && <span className="status-badge filled task-card-status">Filled</span>}
+                                    {task.status === 'open' && <span className="status-badge open task-card-status">Active</span>}
                                     <div className="task-meta">
                                         <span>{task.location}</span> | <span>${task.budget}</span> | <span>Due: {task.dueDate}</span>
                                         {/* applicants will be an array, check its length */}
@@ -328,13 +441,14 @@ function ClientDashboard() {
                                         </div>
                                     )}
                                     <div className="task-actions">
-                                        {/* View Applicants button - only show if there are applicants */}
-                                        {task.applicants && task.applicants.length > 0 && (
+                                        {/* View Applicants button: show if there are ANY applications (even historical) */}
+                                        {/* Count reflects active/pending applications for clarity */}
+                                        {task.applicants && task.applicants.length > 0 && ( // Button appears if there are any applications (active or historical)
                                             <button
                                                 className="view-applicants-button"
                                                 onClick={() => handleViewApplicants(task)}
                                             >
-                                                View Applicants({task.applicants.length})
+                                            View Applicants
                                             </button>
                                         )}
 
@@ -344,7 +458,7 @@ function ClientDashboard() {
                                         )}
                                         {task.status === 'open' && (
                                             <>
-                                                <button className="edit-button" onClick={() => alert(`Edit functionality for ${task.jobTitle}`)}>Edit</button>
+                                                <button className="edit-button" onClick={() => handleOpenEditModal(task)}>Edit</button>
                                                 <button className="mark-as-filled-button" onClick={() => handleMarkAsFilled(task.id)}>Mark as Filled</button>
                                             </>
                                         )}
@@ -495,6 +609,14 @@ function ClientDashboard() {
                     onClose={() => setShowApplicantsModal(false)}
                     onHire={handleHireApplicant}
                     onViewApplicantInfo={handleViewApplicantInfo}
+                />
+            )}
+            {/* Edit Task Modal - conditionally rendered */}
+            {isEditModalOpen && taskToEdit && (
+                <EditTaskModal
+                    task={taskToEdit}
+                    onClose={handleCloseEditModal}
+                    onUpdate={handleUpdateTask}
                 />
             )}
         </div>

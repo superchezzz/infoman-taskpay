@@ -176,8 +176,16 @@ router.post('/:applicationId/withdraw', protect, authorize('applicant'), async (
         await application.save({ transaction: t });
         if (originalStatus === 'Approved') {
             await Task.update(
-                { TaskStatus: 'Open' },
-                { where: { TaskID: application.Task_ID }, transaction: t }
+                {
+                    TaskStatus: 'Open',          // Reopen the task
+                    SelectedApplicantID: null,   // <-- NEW: Clear the selected applicant ID
+                    SelectedApplicantName: null, // <-- NEW: Clear the selected applicant name
+                    FilledDate: null             // <-- NEW: Clear the filled date
+                },
+                {
+                    where: { TaskID: application.Task_ID },
+                    transaction: t
+                }
             );
         }
         await t.commit();

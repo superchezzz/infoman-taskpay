@@ -127,6 +127,12 @@ router.get('/tasks', async (req, res) => {
                 model: TaskApplication,
                 as: 'Applications',
                 attributes: ['ApplicationID', 'Status', 'Applicant_ID'],
+                where: {
+                    Status: {
+                        [Op.in]: ['Pending', 'Approved', 'Shortlisted', 'InProgress', 'SubmittedForReview']
+                    }
+                },
+                required: false, 
                 include: [{
                     model: User,
                     as: 'ApplicantDetails',

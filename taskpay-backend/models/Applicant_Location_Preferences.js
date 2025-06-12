@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'Applicant_Location_Preferences',
-    tableName: 'Applicant_Location_Preferences',
+    tableName: 'applicant_location_preferences',
     timestamps: false
   });
   return Applicant_Location_Preferences;

@@ -12,13 +12,23 @@ module.exports = (sequelize, DataTypes) => {
                 as: 'Roles'
             });
             User.hasOne(models.Applicant, {
-                foreignKey: 'Applicant_ID',
+                foreignKey: 'Applicant_ID', // Applicant_ID in applicants table refers to UserID
                 as: 'ApplicantProfile',
                 onDelete: 'CASCADE'
             });
+            // THIS IS THE NEW ASSOCIATION FOR ClientProfile
+            User.hasOne(models.ClientProfile, {
+                foreignKey: 'UserID', // ClientProfile's primary key is UserID
+                as: 'ClientProfile',
+                onDelete: 'CASCADE'
+            });
             User.hasMany(models.TaskApplication, {
-                foreignKey: 'Applicant_ID',
+                foreignKey: 'Applicant_ID', // Applicant_ID in task_applications table refers to UserID
                 as: 'Applications'
+            });
+            User.hasMany(models.Task, {
+                foreignKey: 'ClientID', // ClientID in tasks table refers to UserID
+                as: 'PostedTasks'
             });
         }
     }
@@ -34,8 +44,10 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'User',
-        tableName: 'Users',
-        timestamps: false // Corrected
+        tableName: 'users', // Ensure this matches the renamed table
+        timestamps: true,
+        createdAt: 'CreatedAt',
+        updatedAt: 'UpdatedAt',
     });
     const hashPassword = async (user) => {
         if (user.changed('PasswordHash') || user.isNewRecord) {

@@ -2,88 +2,576 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorizeClient } = require('../middleware/authMiddleware');
 
+const db = require('../models'); // Import the whole db object to access models
 const {
-    Task, TaskApplication, User, Applicant, Preference, Sequelize
-} = require('../models');
-const { Op } = Sequelize;
+    sequelize, User, Applicant, Task, TaskApplication,
+    ClientProfile, JobCategory, Location, // NEW: Import necessary models
+    Sequelize // Import Sequelize itself for literal queries and operators
+} = db; // Destructure from db
 
-// @route   GET /api/clients/profile
-// @desc    Get the profile of the currently logged-in client
-// @access  Private (Client only)
-router.get('/profile', protect, authorizeClient, async (req, res) => {
+const { Op } = Sequelize; // For Sequelize operators like Op.in
+
+// Helper to format dates for consistent output (e.g., 'Jul 17, 2025')
+const formatDate = (date) => {
+    if (!date) return null;
+    // Ensure date is a valid Date object before formatting
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null; // Handle invalid date strings
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+// Protect all client routes with authentication and authorization middleware
+router.use(protect);
+router.use(authorizeClient); // All routes below this line require client role
+
+// @route   GET /api/client/dashboard-summary
+// @desc    Get client dashboard summary (stats, profile)
+// @access  Private (Client role)
+router.get('/dashboard-summary', async (req, res) => {
     try {
         const clientId = req.user.UserID;
-        const clientProfile = await Applicant.findOne({
-            where: { Applicant_ID: clientId },
-            attributes: ['First_Name', 'Surname']
-        });
-        if (!clientProfile) {
-            const user = await User.findByPk(clientId, { attributes: ['Email'] });
-            return res.status(200).json({ First_Name: user?.Email, Surname: '' });
+
+        // 1. Fetch Client Profile from client_profiles table
+        // req.user already contains ClientProfile due to authMiddleware.js update
+        const clientProfileData = req.user.ClientProfile;
+        const clientUserEmail = req.user.Email; // Get email from req.user directly
+
+        if (!clientProfileData) {
+            return res.status(404).json({ message: 'Client profile not found for the logged-in user.' });
         }
-        res.status(200).json(clientProfile);
-    } catch (error) {
-        console.error('Get Client Profile Error:', error);
-        res.status(500).json({ message: 'Server error while fetching client profile.' });
-    }
-});
 
-// @route   GET /api/clients/stats
-// @desc    Get dashboard statistics for the logged-in client
-// @access  Private (Client only)
-router.get('/stats', protect, authorizeClient, async (req, res) => {
-    const clientId = req.user.UserID;
-    try {
-        const [filledTasks, openTasks, completedTasks, totalApplications] = await Promise.all([
-            Task.count({ where: { ClientID: clientId, TaskStatus: 'Filled' } }),
-            Task.count({ where: { ClientID: clientId, TaskStatus: 'Open' } }),
-            Task.count({ where: { ClientID: clientId, TaskStatus: 'Completed' } }),
-            TaskApplication.count({
-                include: [{ model: Task, as: 'TaskDetails', where: { ClientID: clientId }, attributes: [] }]
-            })
-        ]);
-        res.status(200).json({ filledTasks, openTasks, totalApplications, completedTasks });
-    } catch (error) {
-        console.error('Get Dashboard Stats Error:', error);
-        res.status(500).json({ message: 'Server error while fetching dashboard stats.' });
-    }
-});
-
-// @route   GET /api/clients/tasks
-// @desc    Get all tasks posted by the logged-in client (for the main list)
-// @access  Private (Client only)
-router.get('/tasks', protect, authorizeClient, async (req, res) => {
-    const clientId = req.user.UserID;
-    try {
-        const tasks = await Task.findAll({
+        // 2. Fetch Tasks posted by this client to calculate stats
+        const clientTasks = await Task.findAll({
             where: { ClientID: clientId },
-            order: [['PostedDate', 'DESC']]
+            attributes: ['TaskID', 'TaskStatus'], // Only fetch necessary attributes for stats
+            include: [{
+                model: TaskApplication,
+                as: 'Applications',
+                attributes: ['ApplicationID'], // Only count applications, don't need full details here
+                required: false // Use LEFT JOIN to include tasks even if no applications
+            }],
         });
-        res.status(200).json({ tasks });
+
+        // Calculate stats
+        let filledTasksCount = 0;
+        let openTasksCount = 0;
+        let totalApplicationsCount = 0;
+        let completedTasksCount = 0;
+
+        clientTasks.forEach(task => {
+            if (task.TaskStatus === 'Filled') {
+                filledTasksCount++;
+            }
+            if (task.TaskStatus === 'Open') {
+                openTasksCount++;
+            }
+            if (task.Applications && task.Applications.length > 0) {
+                totalApplicationsCount += task.Applications.length;
+            }
+            if (task.TaskStatus === 'Completed') {
+                completedTasksCount++;
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            clientProfile: {
+                UserID: clientProfileData.UserID,
+                First_Name: clientProfileData.First_Name,
+                Surname: clientProfileData.Surname,
+                CompanyName: clientProfileData.CompanyName,
+                Email: clientUserEmail
+            },
+            stats: {
+                filledTasks: filledTasksCount,
+                openTasks: openTasksCount,
+                totalApplications: totalApplicationsCount,
+                completedTasks: completedTasksCount
+            }
+        });
+
     } catch (error) {
-        console.error('Get Client Tasks Error:', error);
-        res.status(500).json({ message: 'Server error while fetching tasks.' });
+        console.error('Error fetching dashboard summary:', error);
+        res.status(500).json({ message: 'Server error while fetching dashboard summary.', error: error.message });
     }
 });
 
-// @route   GET /api/clients/completed-tasks
-// @desc    Get all completed tasks for the logged-in client
-// @access  Private (Client only)
-router.get('/completed-tasks', protect, authorizeClient, async (req, res) => {
-    const clientId = req.user.UserID;
+
+// @route   GET /api/client/tasks
+// @desc    Get client's task listings (Open, Filled, Closed, All) with applicants
+// @access  Private (Client role)
+router.get('/tasks', async (req, res) => {
     try {
-        const completedTasks = await Task.findAll({
-            where: { ClientID: clientId, TaskStatus: 'Completed' },
-            order: [['updatedAt', 'DESC']]
+        const clientId = req.user.UserID;
+        const { status, page = 1, limit = 3 } = req.query; // Default pagination
+        const offset = (page - 1) * limit;
+
+        let whereClause = { ClientID: clientId };
+        if (status && status !== 'All Tasks') {
+            const statusMap = {
+                'Open Tasks': 'Open',
+                'Filled Tasks': 'Filled',
+                'Closed Tasks': 'Closed',
+            };
+            if (statusMap[status]) {
+                whereClause.TaskStatus = statusMap[status];
+            }
+        }
+
+        const { count, rows: tasks } = await Task.findAndCountAll({
+            where: whereClause,
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            order: [['PostedDate', 'DESC']],
+            include: [{
+                model: TaskApplication,
+                as: 'Applications',
+                attributes: ['ApplicationID', 'Status', 'Applicant_ID'],
+                include: [{
+                    model: User,
+                    as: 'ApplicantDetails',
+                    attributes: ['UserID'],
+                    include: [{
+                        model: Applicant,
+                        as: 'ApplicantProfile',
+                        attributes: ['Applicant_ID', 'First_Name', 'Surname'],
+                        include: [{
+                            model: JobCategory,
+                            as: 'JobCategories',
+                            through: { attributes: [] },
+                            attributes: ['CategoryName']
+                        }]
+                    }]
+                }]
+            }],
         });
-        res.status(200).json({ completedTasks });
+
+        const formattedTasks = tasks.map(task => {
+            let selectedApplicantName = task.SelectedApplicantName || null;
+            let selectedApplicantId = task.SelectedApplicantID || null;
+
+            if (!selectedApplicantId && task.Applications && task.Applications.length > 0) {
+                 const approvedApp = task.Applications.find(app => app.Status === 'Approved');
+                 if (approvedApp && approvedApp.ApplicantDetails && approvedApp.ApplicantDetails.ApplicantProfile) {
+                     selectedApplicantId = approvedApp.Applicant_ID;
+                     selectedApplicantName = `${approvedApp.ApplicantDetails.ApplicantProfile.First_Name} ${approvedApp.ApplicantDetails.ApplicantProfile.Surname}`;
+                 }
+            }
+
+            return {
+                id: task.TaskID,
+                jobTitle: task.Title,
+                location: task.Location,
+                budget: parseFloat(task.Budget),
+                dueDate: formatDate(task.Deadline),
+                applicants: task.Applications.map(app => ({
+                    id: app.Applicant_ID,
+                    name: app.ApplicantDetails?.ApplicantProfile ? `${app.ApplicantDetails.ApplicantProfile.First_Name} ${app.ApplicantDetails.ApplicantProfile.Surname}` : 'N/A',
+                    skills: app.ApplicantDetails?.ApplicantProfile?.JobCategories ? app.ApplicantDetails.ApplicantProfile.JobCategories.map(jc => jc.CategoryName) : [],
+                })),
+                filledDate: formatDate(task.FilledDate),
+                description: task.Description,
+                status: task.TaskStatus.toLowerCase(),
+                selectedApplicantId: selectedApplicantId,
+                selectedApplicantName: selectedApplicantName,
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            tasks: formattedTasks,
+            totalTasks: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page)
+        });
+
     } catch (error) {
-        console.error('Get Completed Tasks Error:', error);
-        res.status(500).json({ message: 'Server error while fetching completed tasks.' });
+        console.error('Error fetching client tasks:', error);
+        res.status(500).json({ message: 'Server error while fetching client tasks.', error: error.message });
     }
 });
 
-// Other specific routes can remain
-// ...
+// @route   GET /api/client/completed-tasks
+// @desc    Get client's completed task listings
+// @access  Private (Client role)
+router.get('/completed-tasks', async (req, res) => {
+    try {
+        const clientId = req.user.UserID;
+        const { page = 1, limit = 2 } = req.query;
+        const offset = (page - 1) * limit;
+
+        const { count, rows: tasks } = await Task.findAndCountAll({
+            where: {
+                ClientID: clientId,
+                TaskStatus: { [Op.in]: ['Completed', 'Filled'] }
+            },
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            order: [['FilledDate', 'DESC'], ['PostedDate', 'DESC']],
+            include: [{
+                model: User,
+                as: 'SelectedApplicantDetails',
+                attributes: ['UserID'],
+                include: [{
+                    model: Applicant,
+                    as: 'ApplicantProfile',
+                    attributes: ['First_Name', 'Surname'],
+                }],
+                required: false
+            }],
+        });
+
+        const formattedCompletedTasks = tasks.map(task => {
+            let completedBy = task.SelectedApplicantName || null;
+            if (!completedBy && task.SelectedApplicantDetails && task.SelectedApplicantDetails.ApplicantProfile) {
+                completedBy = `${task.SelectedApplicantDetails.ApplicantProfile.First_Name} ${task.SelectedApplicantDetails.ApplicantProfile.Surname}`;
+            }
+
+            return {
+                id: task.TaskID,
+                jobTitle: task.Title,
+                location: task.Location,
+                budget: parseFloat(task.Budget),
+                duration: task.Duration,
+                completedBy: completedBy,
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            completedTasks: formattedCompletedTasks,
+            totalCompletedTasks: count,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page)
+        });
+
+    } catch (error) {
+        console.error('Error fetching completed client tasks:', error);
+        res.status(500).json({ message: 'Server error while fetching completed client tasks.', error: error.message });
+    }
+});
+
+
+// @route   POST /api/client/tasks
+// @desc    A logged-in client creates a new task
+// @access  Private (Client only)
+router.post('/tasks', async (req, res) => {
+    const { jobTitle, category, budget, description, deadline, location } = req.body;
+
+    // Basic validation
+    if (!jobTitle || !description || !budget || !category || !deadline || !location) {
+        return res.status(400).json({ message: 'Please fill in all required fields.' });
+    }
+
+    try {
+        const clientId = req.user.UserID;
+        const clientProfile = req.user.ClientProfile; // Access the profile directly from req.user
+
+        if (!clientProfile) {
+            return res.status(400).json({ message: 'Client profile not found for the logged-in user.' });
+        }
+
+        const clientName = clientProfile.CompanyName || `${clientProfile.First_Name} ${clientProfile.Surname}`; // Use company name, fallback to full name
+
+        const newTask = await Task.create({
+            ClientID: clientId,
+            ClientName: clientName,
+            Title: jobTitle,
+            Description: description,
+            Budget: parseFloat(budget),
+            Category: category,
+            Location: location,
+            Deadline: new Date(deadline), // Ensure date format is correct for DB
+            TaskStatus: 'Open', // Default status for new tasks
+            PostedDate: new Date()
+        });
+
+        res.status(201).json({
+            success: true,
+            message: 'Task created successfully!',
+            task: {
+                id: newTask.TaskID,
+                jobTitle: newTask.Title,
+                location: newTask.Location,
+                budget: parseFloat(newTask.Budget),
+                dueDate: formatDate(newTask.Deadline),
+                applicants: [], // Newly posted task has no applicants
+                filledDate: null,
+                description: newTask.Description,
+                status: newTask.TaskStatus.toLowerCase(),
+                selectedApplicantId: null,
+                selectedApplicantName: null,
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating task:', error);
+        res.status(500).json({ message: 'Server error while creating task.', error: error.message });
+    }
+});
+
+// @route   PUT /api/client/tasks/:taskId/mark-filled
+// @desc    Update task status to 'Filled'
+// @access  Private (Client role)
+router.put('/tasks/:taskId/mark-filled', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const clientId = req.user.UserID;
+
+        const task = await Task.findOne({ where: { TaskID: taskId, ClientID: clientId } });
+
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found or you are not the owner.' });
+        }
+
+        if (task.TaskStatus === 'Filled') {
+            return res.status(400).json({ message: 'Task is already marked as filled.' });
+        }
+
+        task.TaskStatus = 'Filled';
+        task.FilledDate = new Date(); // Set filled date when marked filled
+        await task.save();
+
+        // Re-fetch to return comprehensive task data (e.g. for applicants if any)
+        const updatedTaskFull = await Task.findByPk(task.TaskID, {
+            include: [{
+                model: TaskApplication,
+                as: 'Applications',
+                attributes: ['ApplicationID', 'Status', 'Applicant_ID'],
+                include: [{
+                    model: User,
+                    as: 'ApplicantDetails',
+                    attributes: ['UserID'],
+                    include: [{
+                        model: Applicant,
+                        as: 'ApplicantProfile',
+                        attributes: ['Applicant_ID', 'First_Name', 'Surname'],
+                    }]
+                }]
+            }],
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Task marked as filled successfully!',
+            task: {
+                id: updatedTaskFull.TaskID,
+                jobTitle: updatedTaskFull.Title,
+                location: updatedTaskFull.Location,
+                budget: parseFloat(updatedTaskFull.Budget),
+                dueDate: formatDate(updatedTaskFull.Deadline),
+                applicants: updatedTaskFull.Applications.map(app => ({
+                    id: app.Applicant_ID,
+                    name: app.ApplicantDetails?.ApplicantProfile ? `${app.ApplicantDetails.ApplicantProfile.First_Name} ${app.ApplicantDetails.ApplicantProfile.Surname}` : 'N/A',
+                    skills: [] // Skills not fetched here, can add if needed
+                })),
+                filledDate: formatDate(updatedTaskFull.FilledDate),
+                description: updatedTaskFull.Description,
+                status: updatedTaskFull.TaskStatus.toLowerCase(),
+                selectedApplicantId: updatedTaskFull.SelectedApplicantID, // Will be null unless hired through 'hire'
+                selectedApplicantName: updatedTaskFull.SelectedApplicantName, // Will be null unless hired through 'hire'
+            }
+        });
+
+    } catch (error) {
+        console.error('Error marking task as filled:', error);
+        res.status(500).json({ message: 'Server error while marking task as filled.', error: error.message });
+    }
+});
+
+// @route   PUT /api/client/tasks/:taskId/reopen
+// @desc    Reopen a job (change status back to 'Open')
+// @access  Private (Client role)
+router.put('/tasks/:taskId/reopen', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const clientId = req.user.UserID;
+
+        const task = await Task.findOne({ where: { TaskID: taskId, ClientID: clientId } });
+
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found or you are not the owner.' });
+        }
+
+        if (task.TaskStatus === 'Open') {
+            return res.status(400).json({ message: 'Task is already open.' });
+        }
+
+        task.TaskStatus = 'Open';
+        task.SelectedApplicantID = null; // Clear selected applicant
+        task.SelectedApplicantName = null; // Clear selected applicant name
+        task.FilledDate = null; // Clear filled date
+        await task.save();
+
+        // Re-fetch to return comprehensive task data
+        const updatedTaskFull = await Task.findByPk(task.TaskID, {
+            include: [{
+                model: TaskApplication,
+                as: 'Applications',
+                attributes: ['ApplicationID', 'Status', 'Applicant_ID'],
+                include: [{
+                    model: User,
+                    as: 'ApplicantDetails',
+                    attributes: ['UserID'],
+                    include: [{
+                        model: Applicant,
+                        as: 'ApplicantProfile',
+                        attributes: ['Applicant_ID', 'First_Name', 'Surname'],
+                    }]
+                }]
+            }],
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Job reopened successfully!',
+            task: {
+                id: updatedTaskFull.TaskID,
+                jobTitle: updatedTaskFull.Title,
+                location: updatedTaskFull.Location,
+                budget: parseFloat(updatedTaskFull.Budget),
+                dueDate: formatDate(updatedTaskFull.Deadline),
+                applicants: updatedTaskFull.Applications.map(app => ({
+                    id: app.Applicant_ID,
+                    name: app.ApplicantDetails?.ApplicantProfile ? `${app.ApplicantDetails.ApplicantProfile.First_Name} ${app.ApplicantDetails.ApplicantProfile.Surname}` : 'N/A',
+                    skills: []
+                })),
+                filledDate: formatDate(updatedTaskFull.FilledDate),
+                description: updatedTaskFull.Description,
+                status: updatedTaskFull.TaskStatus.toLowerCase(),
+                selectedApplicantId: updatedTaskFull.SelectedApplicantID,
+                selectedApplicantName: updatedTaskFull.SelectedApplicantName,
+            }
+        });
+
+    } catch (error) {
+        console.error('Error reopening job:', error);
+        res.status(500).json({ message: 'Server error while reopening job.', error: error.message });
+    }
+});
+
+// @route   DELETE /api/client/tasks/:taskId
+// @desc    Client deletes a task they own
+// @access  Private (Client role)
+router.delete('/tasks/:taskId', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const clientId = req.user.UserID;
+
+        const task = await Task.findOne({ where: { TaskID: taskId, ClientID: clientId } });
+
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found or you are not authorized to delete it.' });
+        }
+
+        await task.destroy(); // Deletes the task
+        res.status(200).json({ success: true, message: 'Task deleted successfully!' });
+
+    } catch (error) {
+        console.error('Error deleting task:', error);
+        res.status(500).json({ message: 'Server error while deleting task.', error: error.message });
+    }
+});
+
+// @route   PUT /api/client/tasks/:taskId/hire
+// @desc    Hire an applicant for a task
+// @access  Private (Client role)
+router.put('/tasks/:taskId/hire', async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { applicantId } = req.body;
+        const clientId = req.user.UserID;
+
+        const task = await Task.findOne({ where: { TaskID: taskId, ClientID: clientId } });
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found or you are not the owner.' });
+        }
+
+        const application = await TaskApplication.findOne({
+            where: {
+                Task_ID: taskId,
+                Applicant_ID: applicantId
+            }
+        });
+
+        if (!application) {
+            return res.status(404).json({ message: 'Applicant has not applied for this task.' });
+        }
+
+        // Fetch applicant's name for setting on task and response
+        const applicantUser = await User.findOne({
+            where: { UserID: applicantId },
+            include: [{ model: Applicant, as: 'ApplicantProfile', attributes: ['First_Name', 'Surname'] }]
+        });
+        const selectedApplicantName = applicantUser && applicantUser.ApplicantProfile ?
+            `${applicantUser.ApplicantProfile.First_Name} ${applicantUser.ApplicantProfile.Surname}` : null;
+
+
+        // Update the task status to 'Filled' and set selected applicant details
+        task.TaskStatus = 'Filled';
+        task.SelectedApplicantID = applicantId;
+        task.SelectedApplicantName = selectedApplicantName;
+        task.FilledDate = new Date(); // Set filled date when hired
+        await task.save();
+
+        // Update the application status to 'Approved'
+        application.Status = 'Approved';
+        await application.save();
+
+        // Re-fetch the task to return updated details for the frontend
+        const updatedTaskFull = await Task.findByPk(task.TaskID, {
+            include: [{
+                model: TaskApplication,
+                as: 'Applications',
+                attributes: ['ApplicationID', 'Status', 'Applicant_ID'],
+                include: [{
+                    model: User,
+                    as: 'ApplicantDetails',
+                    attributes: ['UserID'],
+                    include: [{
+                        model: Applicant,
+                        as: 'ApplicantProfile',
+                        attributes: ['Applicant_ID', 'First_Name', 'Surname'],
+                    }]
+                }]
+            }],
+        });
+
+        res.status(200).json({
+            success: true,
+            message: `Successfully hired ${selectedApplicantName || 'applicant'} for the task!`,
+            task: {
+                id: updatedTaskFull.TaskID,
+                jobTitle: updatedTaskFull.Title,
+                location: updatedTaskFull.Location,
+                budget: parseFloat(updatedTaskFull.Budget),
+                dueDate: formatDate(updatedTaskFull.Deadline),
+                applicants: updatedTaskFull.Applications.map(app => ({
+                    id: app.Applicant_ID,
+                    name: app.ApplicantDetails?.ApplicantProfile ? `${app.ApplicantDetails.ApplicantProfile.First_Name} ${app.ApplicantDetails.ApplicantProfile.Surname}` : 'N/A',
+                    skills: []
+                })),
+                filledDate: formatDate(updatedTaskFull.FilledDate),
+                description: updatedTaskFull.Description,
+                status: updatedTaskFull.TaskStatus.toLowerCase(),
+                selectedApplicantId: updatedTaskFull.SelectedApplicantID,
+                selectedApplicantName: updatedTaskFull.SelectedApplicantName,
+            }
+        });
+
+    } catch (error) {
+        console.error('Error hiring applicant:', error);
+        res.status(500).json({ message: 'Server error while hiring applicant.', error: error.message });
+    }
+});
+
+// The following routes are client-specific routes used by ClientDashboard.jsx
+// But they are not part of /api/tasks, they are part of /api/client and handled by clientRoutes.js
+// We are moving them here to align with the clientRoutes.js module.exports.
+// Note: Some of these were redundant with methods in taskRoutes.js,
+// so careful aliasing/refactoring may be needed.
+// For now, these handlers will be unique to clientRoutes.js
+
+// This file effectively acts as a clientController now
 
 module.exports = router;

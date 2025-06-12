@@ -1,20 +1,12 @@
-/**
- * @file authMiddleware.js
- * @description Middleware for authentication (verifying JWT) and authorization (checking roles).
- *
- * @modification
- * - Added a generic `authorize` function to reduce code repetition.
- * - Added the required `authorizeApplicant` middleware.
- * - Improved the `protect` function to efficiently load user roles with the user object.
- */
-
+// authMiddleware.js (UPDATED to fetch Client/Applicant profiles)
 const jwt = require('jsonwebtoken');
-const { User, Role } = require('../models');
+// Import all models needed for includes
+const { User, Role, Applicant, ClientProfile } = require('../models'); // <-- NEW: Import ClientProfile and Applicant
 // dotenv config is usually only needed in the main server file, but leaving it for safety.
 require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
 
-// 'protect' middleware verifies the token and attaches the user with their roles
+// 'protect' middleware verifies the token and attaches the user with their roles AND profile
 const protect = async (req, res, next) => {
     let token;
 
@@ -29,15 +21,27 @@ const protect = async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
             // --- IMPROVEMENT ---
-            // Fetch the user AND their associated roles in a single query.
-            // This is more efficient than calling user.getRoles() in every authorization middleware.
+            // Fetch the user, their associated roles, AND their specific profile (Applicant/ClientProfile)
+            // This is more efficient and provides all necessary user data for dashboards.
             req.user = await User.findByPk(decoded.id, {
                 attributes: { exclude: ['PasswordHash'] },
-                include: [{
-                    model: Role,
-                    as: 'Roles',
-                    attributes: ['RoleName'] // We only need the role names
-                }]
+                include: [
+                    {
+                        model: Role,
+                        as: 'Roles',
+                        attributes: ['RoleName'] // We only need the role names
+                    },
+                    {
+                        model: Applicant, // Include Applicant profile
+                        as: 'ApplicantProfile',
+                        required: false // Use LEFT JOIN, user might not be an applicant
+                    },
+                    {
+                        model: ClientProfile, // Include ClientProfile
+                        as: 'ClientProfile',
+                        required: false // Use LEFT JOIN, user might not be a client
+                    }
+                ]
             });
 
             if (!req.user) {
@@ -80,13 +84,13 @@ const authorize = (...allowedRoles) => {
 // Create specific middleware functions using the generic generator for consistency
 const authorizeAdmin = authorize('admin');
 const authorizeClient = authorize('client');
-const authorizeApplicant = authorize('applicant'); // This is the new function we needed
+const authorizeApplicant = authorize('applicant');
 
 
 module.exports = {
     protect,
-    authorize, // Exporting the generator is good practice
+    authorize,
     authorizeAdmin,
     authorizeClient,
-    authorizeApplicant // Now we export the applicant authorizer
+    authorizeApplicant
 };

@@ -160,9 +160,10 @@ router.get('/available', async (req, res) => {
             attributes: {
                 include: [
                     [
+                        // --- FIX IS HERE: Changed 'TaskApplications' to 'task_applications' ---
                         Sequelize.literal(`(
                             SELECT COUNT(*)
-                            FROM TaskApplications AS ta
+                            FROM task_applications AS ta
                             WHERE
                                 ta.Task_ID = Task.TaskID AND
                                 ta.Status IN ('Pending', 'ViewedByAdmin', 'Shortlisted', 'Approved', 'InProgress', 'SubmittedForReview')

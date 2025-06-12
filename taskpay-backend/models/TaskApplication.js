@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'TaskApplication',
-        tableName: 'TaskApplications',
+        tableName: 'task_applications',
         timestamps: false, // Corrected
         indexes: [{ unique: true, fields: ['Applicant_ID', 'Task_ID'] }]
     });

@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'Certification',
-        tableName: 'CERTIFICATION',
+        tableName: 'certifications',
         timestamps: false, // Corrected
         indexes: [
             { unique: true, fields: ['Applicant_ID', 'Certifications', 'Issuing_Organization'] }

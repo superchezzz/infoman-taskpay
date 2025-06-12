@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'Preference',
-        tableName: 'PREFERENCE',
+        tableName: 'preferences',
         timestamps: false,
     });
     return Preference;

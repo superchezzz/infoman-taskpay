@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'Attachment',
-        tableName: 'ATTACHMENTS',
+        tableName: 'attachments',
         timestamps: false // Using manual UploadedAt
     });
 

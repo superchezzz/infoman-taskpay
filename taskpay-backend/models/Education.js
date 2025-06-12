@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'Education',
-        tableName: 'EDUCATION',
+        tableName: 'educations',
         timestamps: false, // We confirmed this is desired
         indexes: [
             {

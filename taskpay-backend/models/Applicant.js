@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
 
             // An Applicant can have many preferred Job Categories through the join table
             Applicant.belongsToMany(models.JobCategory, {
-                through: 'Applicant_JobCategory_Preferences',
+                through: 'applicant_job_category_preferences',
                 foreignKey: 'ApplicantID',
                 otherKey: 'CategoryID',
                 as: 'JobCategories'
@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
 
             // An Applicant can have many preferred Locations through the join table
             Applicant.belongsToMany(models.Location, {
-                through: 'Applicant_Location_Preferences',
+                through: 'applicant_location_preferences',
                 foreignKey: 'ApplicantID',
                 otherKey: 'LocationID',
                 as: 'Locations'
@@ -61,7 +61,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'Applicant',
-        tableName: 'APPLICANT',
+        tableName: 'applicants',
         timestamps: false, // Assuming your table has CreatedAt and UpdatedAt
         updatedAt: 'UpdatedAt',
         createdAt: 'CreatedAt',

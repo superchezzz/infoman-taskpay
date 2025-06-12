@@ -1,22 +1,22 @@
+// taskpay-frontend/src/pages/ClientDashboard.jsx (UPDATED for backend integration, correctly formatted)
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/ClientDashboard.css';
 import { formatName } from '../utils/formatName.js';
-
-// --- Backend Integration Setup (uncomment and configure when ready) ---
+import ApplicantsModal from '../components/ClientDashboard/ApplicantsModal.jsx'; // Make sure this path is correct
 import axios from 'axios'; // Import axios
+
 const API_BASE_URL = 'http://localhost:3001/api'; // Your backend API base URL
 
 function ClientDashboard() {
     // --- State Management ---
-    // Initial states can be null/empty arrays to indicate data needs to be fetched
     const [clientProfile, setClientProfile] = useState(null);
     const [allTasks, setAllTasks] = useState([]);
     const [completedTasks, setCompletedTasks] = useState([]);
-    const [stats, setStats] = useState({ filledTasks: 0, openTasks: 0, totalApplications: 0, completedTasks: 0 }); // completedTasks might be fetched separately or calculated
+    const [stats, setStats] = useState({ filledTasks: 0, openTasks: 0, totalApplications: 0, completedTasks: 0 });
 
-    const [isLoading, setIsLoading] = useState(true); // Added for initial data loading
-    const [error, setError] = useState(null); // Added for initial data loading errors
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     const navigate = useNavigate();
 
@@ -41,7 +41,7 @@ function ClientDashboard() {
     const [showApplicantsModal, setShowApplicantsModal] = useState(false);
     const [selectedTaskForApplicants, setSelectedTaskForApplicants] = useState(null);
 
-    // --- Helper function for header initials ---
+    // Helper function for header initials
     const getInitials = useCallback((name = '') => {
         const parts = name.split(' ');
         if (parts.length > 1) {
@@ -52,165 +52,95 @@ function ClientDashboard() {
         return 'US'; // Default initials
     }, []);
 
-    // --- Data Fetching useEffect (for initial load of client profile, tasks, stats) ---
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            setIsLoading(true);
-            setError(null);
+    // Function to re-fetch all dashboard data. Extracted for reusability.
+    const fetchDashboardData = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
 
-            // Placeholder for authentication token
-            const authToken = localStorage.getItem('authToken');
-            if (!authToken) {
-                // If no token, redirect to login or show unauthorized message
-                setError('Authentication required. Please log in.');
-                setIsLoading(false);
-                navigate('/login'); // Redirect to login
-                return;
-            }
-
-            // Create an Axios instance with base URL and authorization header
-            const api = axios.create({
-                baseURL: API_BASE_URL,
-                headers: { 'Authorization': `Bearer ${authToken}` }
-            });
-
-            try {
-                // Use Promise.allSettled to fetch all data concurrently
-                const results = await Promise.allSettled([
-                    api.get('/client/profile'), // Example endpoint for client profile
-                    api.get('/client/tasks'),   // Example endpoint for client's tasks
-                    api.get('/client/completed-tasks'), // Example endpoint for client's completed tasks
-                    api.get('/client/stats')    // Example endpoint for dashboard stats
-                ]);
-
-                // Process results (backend dev: ensure your API responses match these structures)
-                if (results[0].status === 'fulfilled') {
-                    setClientProfile(results[0].value.data);
-                } else {
-                    console.error('Failed to fetch client profile:', results[0].reason);
-                    setError('Failed to load profile.');
-                }
-
-                if (results[1].status === 'fulfilled') {
-                    setAllTasks(results[1].value.data.tasks || []); // Assuming tasks array is under .data.tasks
-                } else {
-                    console.error('Failed to fetch tasks:', results[1].reason);
-                    setError('Failed to load tasks.');
-                }
-
-                if (results[2].status === 'fulfilled') {
-                    setCompletedTasks(results[2].value.data.completedTasks || []); // Assuming completedTasks is under .data.completedTasks
-                } else {
-                    console.error('Failed to fetch completed tasks:', results[2].reason);
-                    setError('Failed to load completed tasks.');
-                }
-
-                if (results[3].status === 'fulfilled') {
-                    setStats(results[3].value.data);
-                } else {
-                    console.error('Failed to fetch stats:', results[3].reason);
-                    setError('Failed to load dashboard stats.');
-                }
-
-            } catch (err) {
-                console.error('Dashboard data fetching error:', err);
-                setError('An unexpected error occurred while loading dashboard data.');
-                // Handle specific error types, e.g., token expiry
-                if (err.response && err.response.status === 401) {
-                    navigate('/login'); // Redirect to login on unauthorized
-                }
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        // --- Mock Data Initialization (for frontend development without backend) ---
-        // Comment out fetchDashboardData() and uncomment this block
-        // if you want to use static dummy data for frontend development.
-        const initializeMockData = () => {
-            setClientProfile({ First_Name: 'Juan', Surname: 'Dela Cruz', Email: 'juan.delacruz@example.com' });
-            setAllTasks([
-                { id: 1, jobTitle: 'Website Redesign Project', location: 'Manila', budget: 2500, dueDate: 'July 17, 2025',
-                  applicants: [{ id: 101, name: 'Maria Cruz Santos', skills: ['Data Science', 'AI/ML', 'Web Development'] }],
-                  filledDate: 'May 30, 2025', description: 'Experienced web dev for modern UI/UX.', status: 'filled',
-                  selectedApplicantId: 101, selectedApplicantName: 'Maria Cruz Santos' },
-                { id: 2, jobTitle: 'Logo Design for Startup', location: 'Manila', budget: 500, dueDate: 'July 17, 2025',
-                  applicants: [{ id: 201, name: 'Benito Suarez', skills: ['Graphic Design', 'Branding'] }],
-                  filledDate: null, description: 'Creative logo design.', status: 'open',
-                  selectedApplicantId: null, selectedApplicantName: null },
-                { id: 3, jobTitle: 'Content Writing for Blog', location: 'Manila', budget: 800, dueDate: 'July 17, 2025',
-                  applicants: [{ id: 301, name: 'Diana Garcia', skills: ['Content Writing', 'SEO'] }],
-                  filledDate: null, description: 'Content for blog.', status: 'open',
-                  selectedApplicantId: null, selectedApplicantName: null },
-                { id: 4, jobTitle: 'Mobile App Development', location: 'Cebu', budget: 5000, dueDate: 'August 1, 2025',
-                  applicants: [], filledDate: null, description: 'Cross-platform mobile app.', status: 'open',
-                  selectedApplicantId: null, selectedApplicantName: null },
-                { id: 5, jobTitle: 'Social Media Manager', location: 'Remote', budget: 700, dueDate: 'July 25, 2025',
-                  applicants: [{ id: 501, name: 'Emilio Lopez', skills: ['Social Media Marketing'] }], filledDate: null,
-                  description: 'Handle online presence.', status: 'open', selectedApplicantId: null, selectedApplicantName: null },
-                { id: 6, jobTitle: 'Data Entry Project', location: 'Manila', budget: 300, dueDate: 'July 10, 2025',
-                  applicants: [], filledDate: null, description: 'Simple data entry.', status: 'closed',
-                  selectedApplicantId: null, selectedApplicantName: null }
-            ]);
-            setCompletedTasks([
-                { id: 101, jobTitle: 'Website Redesign Project', location: 'Manila', budget: 2500, duration: '7 days', completedBy: 'Maria Santos' },
-                { id: 102, jobTitle: 'Mobile App Development', location: 'Manila', budget: 3400, duration: '7 days', completedBy: 'Maria Santos' },
-                { id: 103, jobTitle: 'SEO Optimization', location: 'Davao', budget: 1200, duration: '5 days', completedBy: 'John Doe' }
-            ]);
-            // Stats will be calculated by the subsequent useEffect
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+            setError('Authentication required. Please log in.');
             setIsLoading(false);
-        };
-
-        fetchDashboardData(); // Call the async data fetching function
-        // OR
-        // initializeMockData(); // Call the mock data initialization function
-    }, [navigate]); // navigate is a dependency because it's used inside fetchDashboardData
-
-    // --- Recalculate stats whenever allTasks changes (can be used with both real and mock data) ---
-    useEffect(() => {
-        const filled = allTasks.filter(task => task.status === 'filled').length;
-        const open = allTasks.filter(task => task.status === 'open').length;
-        const totalApps = allTasks.reduce((sum, task) => sum + (task.applicants ? task.applicants.length : 0), 0);
-        // Note: completedTasks count is usually fetched from backend or a separate state if it's "total ever completed"
-        // Here, we'll keep the design's 13 for demonstration, but a backend would provide the actual count.
-        setStats(prevStats => ({
-            ...prevStats,
-            filledTasks: filled,
-            openTasks: open,
-            totalApplications: totalApps
-        }));
-    }, [allTasks]);
-
-
-    // --- Task Filtering and Pagination Logic (remains the same) ---
-    const filteredTasks = useMemo(() => {
-        if (taskFilter === 'All Tasks') {
-            return allTasks;
-        } else if (taskFilter === 'Open Tasks') {
-            return allTasks.filter(task => task.status === 'open');
-        } else if (taskFilter === 'Filled Tasks') {
-            return allTasks.filter(task => task.status === 'filled');
-        } else if (taskFilter === 'Closed Tasks') {
-            return allTasks.filter(task => task.status === 'closed');
+            navigate('/login');
+            return;
         }
+
+        const api = axios.create({
+            baseURL: API_BASE_URL,
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+
+        try {
+            // Fetch all dashboard data concurrently
+            const [summaryRes, tasksRes, completedTasksRes] = await Promise.allSettled([
+                api.get('/client/dashboard-summary'),
+                api.get(`/client/tasks?page=${currentTasksPage}&limit=${tasksPerPage}&status=${taskFilter}`),
+                api.get(`/client/completed-tasks?page=${currentCompletedTasksPage}&limit=${completedTasksPerPage}`)
+            ]);
+
+            // Process dashboard summary
+            if (summaryRes.status === 'fulfilled' && summaryRes.value.data.success) {
+                setClientProfile(summaryRes.value.data.clientProfile);
+                setStats(summaryRes.value.data.stats);
+            } else {
+                console.error('Failed to fetch summary:', summaryRes.reason || summaryRes.value.data.message);
+                setError('Failed to load dashboard summary.');
+            }
+
+            // Process client tasks
+            if (tasksRes.status === 'fulfilled' && tasksRes.value.data.success) {
+                setAllTasks(tasksRes.value.data.tasks || []);
+            } else {
+                console.error('Failed to fetch tasks:', tasksRes.value?.data?.message || tasksRes.reason);
+                setError('Failed to load your tasks.');
+            }
+
+            // Process completed tasks
+            if (completedTasksRes.status === 'fulfilled' && completedTasksRes.value.data.success) {
+                setCompletedTasks(completedTasksRes.value.data.completedTasks || []);
+            } else {
+                console.error('Failed to fetch completed tasks:', completedTasksRes.value?.data?.message || completedTasksRes.reason);
+                setError('Failed to load completed tasks.');
+            }
+
+        } catch (err) {
+            console.error('Dashboard data fetching error:', err);
+            setError('An unexpected error occurred while loading dashboard data.');
+            if (err.response && err.response.status === 401) {
+                navigate('/login');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, [navigate, currentTasksPage, currentCompletedTasksPage, taskFilter]); // Dependencies for fetchDashboardData
+
+    // --- useEffect for initial data load and re-fetching on dependencies ---
+    useEffect(() => {
+        fetchDashboardData();
+    }, [fetchDashboardData]); // fetchDashboardData is a dependency because it's wrapped in useCallback
+
+    const filteredTasks = useMemo(() => {
         return allTasks;
-    }, [allTasks, taskFilter]);
+    }, [allTasks]);
 
     const indexOfLastTask = currentTasksPage * tasksPerPage;
     const indexOfFirstTask = indexOfLastTask - tasksPerPage;
+    // --- FIX START: Add this line for currentTasks ---
     const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
+    // --- FIX END ---
     const totalTasksPages = Math.ceil(filteredTasks.length / tasksPerPage);
-
     const paginateTasks = (pageNumber) => setCurrentTasksPage(pageNumber);
 
     const indexOfLastCompletedTask = currentCompletedTasksPage * completedTasksPerPage;
     const indexOfFirstCompletedTask = indexOfLastCompletedTask - completedTasksPerPage;
+    // --- FIX START: Add this line for currentCompletedTasks ---
     const currentCompletedTasks = completedTasks.slice(indexOfFirstCompletedTask, indexOfLastCompletedTask);
-    const totalCompletedTasksPages = Math.ceil(completedTasks.length / completedTasksPerPage);
-
+    // --- FIX END ---
+    const totalCompletedTasksPages = Math.ceil(completedTasks.length / completedTasksPerPage); // Note: It was `completedCompletedTasksPerPage` in previous versions. Ensure it's `completedTasksPerPage`
     const paginateCompletedTasks = (pageNumber) => setCurrentCompletedTasksPage(pageNumber);
 
-    // --- Task Action Handlers (Backend-Ready Structure) ---
+
+    // --- Task Action Handlers (Calling Backend APIs and then refreshing data) ---
 
     const handleViewApplicants = useCallback((task) => {
         setSelectedTaskForApplicants(task);
@@ -218,179 +148,66 @@ function ClientDashboard() {
     }, []);
 
     const handleHireApplicant = useCallback(async (taskId, applicantId, applicantName) => {
-        console.log(`Attempting to hire applicant ${applicantName} (ID: ${applicantId}) for task ID: ${taskId}`);
-
-        // --- Backend Integration: Uncomment and replace mock logic ---
         const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            alert('Authentication required to perform this action.');
-            navigate('/login');
-            return;
-        }
-        const api = axios.create({
-            baseURL: API_BASE_URL,
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
+        const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
         try {
-            // Replace with your actual hire endpoint
-            // Example: PUT /api/client/jobs/:taskId/hire
-            const response = await api.put(`/client/jobs/${taskId}/hire`, { applicantId });
-
-            // Assuming your backend responds with the updated task
-            const updatedTaskFromBackend = response.data.task; // Adjust based on actual backend response structure
-
-            setAllTasks(prevTasks =>
-                prevTasks.map(task =>
-                    task.id === taskId
-                        ? { ...task, ...updatedTaskFromBackend } // Merge backend update
-                        : task
-                )
-            );
+            const response = await api.put(`/client/tasks/${taskId}/hire`, { applicantId });
+            alert(response.data.message);
+            fetchDashboardData(); // Refresh all data to reflect changes
             setShowApplicantsModal(false);
-            alert(`Successfully hired ${applicantName} for the task!`);
         } catch (error) {
             console.error('Error hiring applicant:', error.response ? error.response.data : error.message);
             alert(`Failed to hire applicant: ${error.response?.data?.message || 'Please try again.'}`);
         }
-
-        // --- Mocked success for frontend demo (Comment out when backend is active) ---
-        // const updatedTasks = allTasks.map(task =>
-        //     task.id === taskId
-        //         ? { ...task, status: 'filled', selectedApplicantId: applicantId, selectedApplicantName: applicantName, filledDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) }
-        //         : task
-        // );
-        // setAllTasks(updatedTasks);
-        // setShowApplicantsModal(false);
-        // alert(`Successfully hired ${applicantName} for the task!`);
-    }, [allTasks, navigate]); // Added navigate to dependency array
+    }, [navigate, fetchDashboardData]);
 
     const handleMarkAsFilled = useCallback(async (taskId) => {
-        console.log(`Attempting to mark task ID: ${taskId} as filled`);
-
-        // --- Backend Integration: Uncomment and replace mock logic ---
         const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            alert('Authentication required to perform this action.');
-            navigate('/login');
-            return;
-        }
-        const api = axios.create({
-            baseURL: API_BASE_URL,
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
+        const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
         try {
-            // Replace with your actual mark-as-filled endpoint
-            // Example: PUT /api/client/jobs/:taskId/mark-filled
-            const response = await api.put(`/client/jobs/${taskId}/mark-filled`);
-
-            const updatedTaskFromBackend = response.data.task; // Adjust based on actual backend response structure
-
-            setAllTasks(prevTasks =>
-                prevTasks.map(task =>
-                    task.id === taskId
-                        ? { ...task, ...updatedTaskFromBackend }
-                        : task
-                )
-            );
-            alert('Task marked as filled successfully!');
+            const response = await api.put(`/client/tasks/${taskId}/mark-filled`);
+            alert(response.data.message);
+            fetchDashboardData(); // Refresh all data
         } catch (error) {
             console.error('Error marking task as filled:', error.response ? error.response.data : error.message);
             alert(`Failed to mark task as filled: ${error.response?.data?.message || 'Please try again.'}`);
         }
-
-        // --- Mocked success for frontend demo (Comment out when backend is active) ---
-        // const updatedTasks = allTasks.map(task =>
-        //     task.id === taskId ? { ...task, status: 'filled', filledDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) } : task
-        // );
-        // setAllTasks(updatedTasks);
-        // alert('Task marked as filled successfully!');
-    }, [allTasks, navigate]); // Added navigate to dependency array
+    }, [navigate, fetchDashboardData]);
 
     const handleReopenJob = useCallback(async (taskId) => {
-        console.log(`Attempting to reopen task ID: ${taskId}`);
-
-        // --- Backend Integration: Uncomment and replace mock logic ---
         const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            alert('Authentication required to perform this action.');
-            navigate('/login');
-            return;
-        }
-        const api = axios.create({
-            baseURL: API_BASE_URL,
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
+        const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
         try {
-            // Replace with your actual reopen endpoint
-            // Example: PUT /api/client/jobs/:taskId/reopen
-            const response = await api.put(`/client/jobs/${taskId}/reopen`);
-
-            const updatedTaskFromBackend = response.data.task; // Adjust based on actual backend response structure
-
-            setAllTasks(prevTasks =>
-                prevTasks.map(task =>
-                    task.id === taskId
-                        ? { ...task, ...updatedTaskFromBackend }
-                        : task
-                )
-            );
-            alert('Job reopened successfully!');
+            const response = await api.put(`/client/tasks/${taskId}/reopen`);
+            alert(response.data.message);
+            fetchDashboardData(); // Refresh all data
         } catch (error) {
             console.error('Error reopening job:', error.response ? error.response.data : error.message);
             alert(`Failed to reopen job: ${error.response?.data?.message || 'Please try again.'}`);
         }
-
-        // --- Mocked success for frontend demo (Comment out when backend is active) ---
-        // const updatedTasks = allTasks.map(task =>
-        //     task.id === taskId ? { ...task, status: 'open', selectedApplicantId: null, selectedApplicantName: null, filledDate: null } : task
-        // );
-        // setAllTasks(updatedTasks);
-        // alert('Job reopened successfully!');
-    }, [allTasks, navigate]); // Added navigate to dependency array
+    }, [navigate, fetchDashboardData]);
 
     const handleDeleteJob = useCallback(async (taskId, jobTitle) => {
-        if (!window.confirm(`Are you sure you want to delete "${jobTitle}"? This action cannot be undone.`)) {
-            return;
-        }
-        console.log(`Attempting to delete task ID: ${taskId}`);
-
-        // --- Backend Integration: Uncomment and replace mock logic ---
+        if (!window.confirm(`Are you sure you want to delete "${jobTitle}"? This action cannot be undone.`)) { return; }
         const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            alert('Authentication required to perform this action.');
-            navigate('/login');
-            return;
-        }
-        const api = axios.create({
-            baseURL: API_BASE_URL,
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
+        const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
         try {
-            // Replace with your actual delete endpoint
-            // Example: DELETE /api/client/jobs/:taskId
-            const response = await api.delete(`/client/jobs/${taskId}`);
-
-            // Assuming success (200 OK or 204 No Content)
-            if (response.status === 200 || response.status === 204) {
-                setAllTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-                alert(`"${jobTitle}" deleted successfully!`);
-            } else {
-                throw new Error(`Unexpected response status: ${response.status}`);
-            }
-
+            const response = await api.delete(`/client/tasks/${taskId}`);
+            alert(response.data.message);
+            fetchDashboardData(); // Refresh all data
         } catch (error) {
             console.error('Error deleting job:', error.response ? error.response.data : error.message);
             alert(`Failed to delete job: ${error.response?.data?.message || 'Please try again.'}`);
         }
-
-        // --- Mocked success for frontend demo (Comment out when backend is active) ---
-        // setAllTasks(allTasks.filter(task => task.id !== taskId));
-        // alert(`"${jobTitle}" deleted successfully!`);
-    }, [allTasks, navigate]); // Added navigate to dependency array
+    }, [navigate, fetchDashboardData]);
 
     const handlePostTask = useCallback(async (e) => {
         e.preventDefault();
@@ -398,65 +215,33 @@ function ClientDashboard() {
         const newTaskPayload = { // Data to send to backend
             jobTitle,
             category,
-            budget: parseInt(budget), // Ensure budget is a number
+            budget: parseInt(budget),
             description,
-            dueDate: deadline, // Backend might expect a specific date format
+            deadline,
             location,
-            // Backend might handle applicants, filledDate, status, selectedApplicant internally
         };
 
-        console.log('Attempting to post new task:', newTaskPayload);
-
-        // --- Backend Integration: Uncomment and replace mock logic ---
         const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-            alert('Authentication required to post a task.');
-            navigate('/login');
-            return;
-        }
-        const api = axios.create({
-            baseURL: API_BASE_URL,
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
+        if (!authToken) { alert('Authentication required.'); navigate('/login'); return; }
+        const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
 
         try {
-            // Replace with your actual create task endpoint
-            // Example: POST /api/client/jobs
-            const response = await api.post('/client/jobs', newTaskPayload);
-
-            const postedTaskFromBackend = response.data.task; // Adjust based on actual backend response structure
-
-            setAllTasks(prevTasks => [...prevTasks, postedTaskFromBackend]); // Add the job returned by backend
+            const response = await api.post('/client/tasks', newTaskPayload);
             alert('Task Posted successfully!');
+            fetchDashboardData(); // Refresh all data
         } catch (error) {
             console.error('Error posting task:', error.response ? error.response.data : error.message);
             alert(`Failed to post task: ${error.response?.data?.message || 'Please try again.'}`);
         }
 
-        // --- Mocked success for frontend demo (Comment out when backend is active) ---
-        // const newTaskMock = {
-        //     id: Math.max(...allTasks.map(t => t.id), 0) + 1, // Simple ID generation for demo
-        //     jobTitle, category, budget: parseInt(budget), description, dueDate: deadline,
-        //     location, applicants: [], filledDate: null, status: 'open',
-        //     selectedApplicantId: null, selectedApplicantName: null
-        // };
-        // setAllTasks(prevTasks => [...prevTasks, newTaskMock]);
-        // alert('Task Posted successfully!');
-
-        // Reset form fields regardless of success/failure for UX
-        setJobTitle('');
-        setCategory('');
-        setBudget('');
-        setDescription('');
-        setDeadline('');
-        setLocation('');
-    }, [jobTitle, category, budget, description, deadline, location, allTasks, navigate]); // Added navigate and allTasks to dependency array
+        // Reset form fields
+        setJobTitle(''); setCategory(''); setBudget(''); setDescription(''); setDeadline(''); setLocation('');
+    }, [jobTitle, category, budget, description, deadline, location, navigate, fetchDashboardData]);
 
     const handleViewApplicantInfo = useCallback((applicantId) => {
         navigate(`/client/applicant-info/${applicantId}`);
     }, [navigate]);
 
-    // Render loading/error states for initial dashboard load
     if (isLoading) {
         return <div className="loading-state">Loading dashboard data...</div>;
     }
@@ -467,12 +252,14 @@ function ClientDashboard() {
 
     return (
         <div className="client-dashboard-container flex flex-column">
-            {/* ... (rest of your JSX rendering remains the same) ... */}
             <div className="client-dashboard-header flex items-center">
                 <h1 className="client-taskpay-title text-[32px] tracking-[3px] font-bold">Task<span>Pay</span></h1>
                 <div className="client-dashboard-name-img-container flex flex-row leading-[15px]">
                     <div>
-                        <p className="tracking-[3px] font-bold text-18px">Welcome, {clientProfile?.First_Name ? formatName(clientProfile.First_Name) : 'User'} {clientProfile?.Surname ? formatName(clientProfile.Surname) : ''}</p>
+                        <p className="tracking-[3px] font-bold text-18px">
+                            Welcome, {clientProfile?.First_Name ? formatName(clientProfile.First_Name) : 'User'}{' '}
+                            {clientProfile?.Surname ? formatName(clientProfile.Surname) : ''}
+                        </p>
                         <p className="client-dashboard-text tracking-[3px] text-16px font-bold">Client Dashboard</p>
                     </div>
                     <div className="client-profile-initials">
@@ -520,8 +307,8 @@ function ClientDashboard() {
                         </div>
                     </div>
                     <div className="task-list">
-                        {currentTasks.length > 0 ? (
-                            currentTasks.map(task => (
+                        {filteredTasks.length > 0 ? (
+                            filteredTasks.map(task => ( // Use filteredTasks here
                                 <div key={task.id} className={`task-card ${task.status === 'filled' ? 'filled-task' : task.status === 'closed' ? 'closed-task' : 'open-task'}`}>
                                     <h3>{task.jobTitle}
                                         {task.status === 'closed' && <span className="status-badge closed">Closed</span>}

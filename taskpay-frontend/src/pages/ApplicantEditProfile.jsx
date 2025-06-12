@@ -122,70 +122,77 @@ const ApplicantEditProfile = () => {
     });
   };
 
-  const handleArrayChange = (section, index, field, value) => {
-    setProfileData((prevData) => {
+const handleArrayChange = (section, index, field, value) => {
+  setProfileData((prevData) => {
       const newArray = [...prevData[section]];
-      const updatedItem = { ...newArray[index] }; // Create a copy of the item to modify
+      const updatedItem = { ...newArray[index] };
 
-      // --- MAPPING LOGIC FOR UPDATING NESTED ARRAY ITEMS ---
       if (section === 'Educations') {
-        switch (field) {
-          case 'Educational_Attainment':
-            updatedItem.Educ_Level = value;
-            updatedItem.Educational_Attainment = value; // Update frontend name for display
-            break;
-          case 'Institution':
-            updatedItem.School = value;
-            updatedItem.Institution = value; // Update frontend name for display
-            break;
-          case 'Award':
-            updatedItem.Awards = value;
-            updatedItem.Award = value; // Update frontend name for display
-            break;
-          case 'Graduation_Year':
-            updatedItem.Yr_Grad = value;
-            updatedItem.Graduation_Year = value; // Update frontend name for display
-            break;
-          default:
-            updatedItem[field] = value; // For Course, etc.
-        }
+          switch (field) {
+              case 'Educational_Attainment':
+                  updatedItem.Educ_Level = value; // Backend name
+                  updatedItem.Educational_Attainment = value; // Frontend display name
+                  break;
+              case 'Institution':
+                  updatedItem.School = value;
+                  updatedItem.Institution = value;
+                  break;
+              case 'Award':
+                  updatedItem.Awards = value;
+                  updatedItem.Award = value;
+                  break;
+              case 'Graduation_Year':
+                  updatedItem.Yr_Grad = value;
+                  updatedItem.Graduation_Year = value;
+                  break;
+              default:
+                  updatedItem[field] = value;
+          }
       } else if (section === 'WorkExperiences') {
-        switch (field) {
-            case 'Start_Date': updatedItem.inclusive_date_from = value; break;
-            case 'End_Date': updatedItem.inclusive_date_to = value; break;
-            case 'Cmp_Name':
-                // When Cmp_Name is edited, assume it's a manual entry for now
-                updatedItem.Cmp_Name_Manual = value;
-                updatedItem.Cmp_Name = value; // Keep this for display in form
-                updatedItem.CompanyInfo_ID = null; // Break link to existing company if typing new name
-                break;
-            case 'Cmp_Address':
-                updatedItem.Cmp_Address_Manual = value;
-                updatedItem.Cmp_Address = value; // Keep this for display in form
-                updatedItem.CompanyInfo_ID = null; // Break link to existing company if typing new address
-                break;
-            default: updatedItem[field] = value;
-        }
+          // Your existing WorkExperiences mapping logic here
+          switch (field) {
+              case 'Start_Date': updatedItem.inclusive_date_from = value; updatedItem.Start_Date = value; break;
+              case 'End_Date': updatedItem.inclusive_date_to = value; updatedItem.End_Date = value; break;
+              case 'Cmp_Name':
+                  updatedItem.Cmp_Name_Manual = value;
+                  updatedItem.Cmp_Name = value; // Keep this for display in form
+                  updatedItem.CompanyInfo_ID = null;
+                  break;
+              case 'Cmp_Address':
+                  updatedItem.Cmp_Address_Manual = value;
+                  updatedItem.Cmp_Address = value; // Keep this for display in form
+                  updatedItem.CompanyInfo_ID = null;
+                  break;
+              default: updatedItem[field] = value;
+          }
       } else if (section === 'Certifications') {
-        switch (field) {
-            case 'Certification_Name': updatedItem.Certifications = value; break;
-            case 'Start_Date': updatedItem.course_date_from = value; break;
-            case 'End_Date': updatedItem.course_date_to = value; break;
-            default: updatedItem[field] = value;
-        }
+          switch (field) {
+              case 'Certification_Name':
+                  updatedItem.Certifications = value; // Backend property name
+                  updatedItem.Certification_Name = value; // Frontend display name
+                  break;
+              case 'Start_Date':
+                  updatedItem.course_date_from = value; // Backend property name
+                  updatedItem.Start_Date = value; // Frontend display name
+                  break;
+              case 'End_Date':
+                  updatedItem.course_date_to = value; // Backend property name
+                  updatedItem.End_Date = value; // Frontend display name
+                  break;
+              default:
+                  updatedItem[field] = value;
+          }
       } else {
-        // Default behavior for other sections where frontend and backend field names directly match
-        updatedItem[field] = value;
+          updatedItem[field] = value;
       }
-      // --- END OF MAPPING LOGIC ---
 
-      newArray[index] = updatedItem; // Assign the updated item back to the new array
+      newArray[index] = updatedItem;
       return {
-        ...prevData,
-        [section]: newArray,
+          ...prevData,
+          [section]: newArray,
       };
-    });
-  };
+  });
+};
 
   const addToArray = (section, newItem) => {
     let transformedItem = { ...newItem };

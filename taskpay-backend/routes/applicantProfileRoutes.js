@@ -2,11 +2,29 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorizeApplicant } = require('../middleware/authMiddleware');
 
+const db = require('../models');
+
+
 const {
-    sequelize, User, Applicant, TaskApplication, Task, Education,
-    WorkExperience, Certification, Preference, CompanyInformation,
-    JobCategory, Location
+    sequelize,
+    User,
+    Applicant,
+    TaskApplication,
+    Task,
+    Education,
+    WorkExperience,
+    Certification,
+    Preference,
+    CompanyInformation,
+    JobCategory,
+    Location,
+    Applicant_JobCategory_Preferences,
+    Applicant_Location_Preferences
 } = require('../models');
+
+// --- ADD THIS CONSOLE.LOG TEMPORARILY ---
+console.log('Models available in db object:', Object.keys(db));
+// --- END TEMPORARY LOG ---
 
 // @route   GET /api/profile/documents
 // @desc    Get an applicant's document numbers (TIN, SSS, PhilHealth)
@@ -131,9 +149,6 @@ router.post('/form', protect, authorizeApplicant, async (req, res) => {
                     return WorkExperience.upsert({ ...job, Applicant_ID: applicantId, CompanyInfo_ID: companyInfoId }, { transaction: t });
                 }));
             }
-            
-            // --- THIS IS THE FINAL FIX ---
-            // This block now contains the correct logic to save to the join tables.
             if (preferences) {
                 // First, save the salary info to the main Preference table
                 await Preference.upsert({

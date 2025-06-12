@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             // A Job Category can belong to many Applicants through the join table
             JobCategory.belongsToMany(models.Applicant, {
-                through: 'Applicant_JobCategory_Preferences',
+                through: 'applicant_job_category_preferences',
                 foreignKey: 'CategoryID',
                 otherKey: 'ApplicantID',
                 as: 'Applicants'
@@ -19,7 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     }, {
         sequelize,
         modelName: 'JobCategory',
-        tableName: 'JobCategories',
+        tableName: 'job_categories',
         timestamps: false
     });
     return JobCategory;

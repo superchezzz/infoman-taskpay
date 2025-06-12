@@ -77,7 +77,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/applications', protect, applicationRoutes);
 app.use('/api/uploads', protect, fileUploadRoutes); 
-app.use('/api/clients', clientRoutes); 
+app.use('/api/client', clientRoutes); 
 app.use('/api/lookups', lookupRoutes);
 
 // --- Centralized Error Handling ---

@@ -17,10 +17,10 @@
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
     width: 90%;
-    max-width: 900px; /* ADJUST THIS VALUE to match your Figma's desired width */
-    min-height: 500px; /* OPTIONAL: Add a minimum height if needed for design consistency */
+    max-width: 900px; 
+    min-height: 500px; 
     position: relative;
-    border: 0px solid #f3bd06; /* Added a subtle yellow border to the modal content */
+    border: 0px solid #f3bd06; 
 }
 
 .modal-header {
@@ -43,11 +43,11 @@
     border: none;
     font-size: 1.8em;
     cursor: pointer;
-    color: #f3bd06; /* Close button in yellow */
+    color: #f3bd06;
     padding: 5px;
 }
 .modal-close-button:hover {
-    color: #d1a500; /* Darker yellow on hover */
+    color: #d1a500; 
 }
 
 .modal-body {
@@ -56,7 +56,7 @@
     padding-right: 10px;
 }
 
-/* Task Detail Modal (Data Scientist Specialist) */
+
 .task-detail-modal p {
     margin-bottom: 8px;
     font-size: 0.95em;
@@ -65,7 +65,7 @@
 .task-detail-modal h4 {
     margin-top: 20px;
     margin-bottom: 10px;
-    color: #f3bd06; /* Sub-headings in yellow */
+    color: #f3bd06;
     font-size: 1.2em;
 }
 
@@ -74,12 +74,12 @@
     gap: 20px;
     margin: 15px 0;
     font-weight: bold;
-    color: #333; /* Default text for stats */
+    color: #333; 
     justify-content: space-around;
     padding: 10px;
     border-radius: 5px;
-    background-color: #fff8e1; /* Very light yellow background for stats block */
-    border: 1px solid rgba(243, 189, 6, 0.2); /* Subtle yellow border */
+    background-color: #fff8e1; 
+    border: 1px solid rgba(243, 189, 6, 0.2);
 }
 .task-detail-modal .task-stats span {
     display: flex;
@@ -87,10 +87,10 @@
     align-items: center;
     color: #333;
 }
-/* Reusing original colors for specific stats to maintain distinction */
-.task-detail-modal .task-stats span:first-child { color: #28a745; } /* Budget green */
-.task-detail-modal .task-stats span:nth-child(2) { color: #6c757d; } /* Duration grey */
-.task-detail-modal .task-stats span:last-child { color: #dc3545; } /* Applicants red */
+ 
+.task-detail-modal .task-stats span:first-child { color: #28a745; } 
+.task-detail-modal .task-stats span:nth-child(2) { color: #6c757d; } 
+.task-detail-modal .task-stats span:last-child { color: #dc3545; } 
 
 
 .task-detail-modal .modal-actions {
@@ -109,17 +109,17 @@
     transition: background-color 0.2s;
 }
 
-/* Buttons will now use the yellow theme more prominently */
+ 
 .task-detail-modal .start-task-button {
-    background-color: #f3bd06; /* Yellow for Start Task */
+    background-color: #f3bd06;  
     color: white;
 }
 .task-detail-modal .start-task-button:hover {
-    background-color: #d1a500; /* Darker yellow on hover */
+    background-color: #d1a500;  
 }
 
 .task-detail-modal .withdraw-button {
-    background-color: #dc3545; /* Retained red for withdraw as it's a destructive action */
+    background-color: #dc3545;  
     color: white;
 }
 .task-detail-modal .withdraw-button:hover {
@@ -127,21 +127,20 @@
 }
 
 .task-detail-modal .apply-button {
-    background-color: #f3bd06; /* Yellow for Apply */
+    background-color: #f3bd06;
     color: white;
 }
 .task-detail-modal .apply-button:hover {
     background-color: #d1a500;
 }
 
-/* --- NEW STYLES FOR TASK DETAIL MODAL (Matching Figma Design) --- */
 
 .modal-header .task-detail-modal-title {
-    color: #fec400; /* Yellow color for the Task Detail Modal title only */
+    color: #fec400; 
 }
 
 .task-detail-modal .detail-header-info {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Very light grey separator */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05); 
     padding-bottom: 15px;
     margin-bottom: 15px;
 }
@@ -154,19 +153,19 @@
     display: flex;
     align-items: center;
 }
-/* Reusing the client-initials style from common task cards, but can be overridden here if needed */
+ 
 .task-detail-modal .detail-client-info .client-initials {
-    background-color: #f3bd06; /* Yellow badge */
+    background-color: #f3bd06; 
     color: white;
     border-radius: 50%;
-    width: 32px; /* Larger badge for detail view */
+    width: 32px;
     height: 32px;
     line-height: 32px;
     text-align: center;
     font-size: 1em;
     font-weight: bold;
-    margin-left: 10px; /* Space from "Client:" text */
-    margin-right: 8px; /* Space between badge and full name */
+    margin-left: 10px; 
+    margin-right: 8px; 
     display: inline-block;
 }
 .task-detail-modal .detail-client-info .client-name-full {
@@ -178,7 +177,7 @@
 .task-detail-modal .detail-meta-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px; /* Space between meta items */
+    gap: 20px;  
     font-size: 0.9em;
     color: #666;
 }
@@ -192,38 +191,38 @@
 .task-detail-modal .detail-meta-item .icon-deadline-date,
 .task-detail-modal .detail-meta-item .icon-category-detail {
     display: inline-block;
-    width: 18px; /* Slightly larger icons for detail view */
+    width: 18px;  
     height: 18px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    margin-right: 8px; /* Space between icon and text */
+    margin-right: 8px;  
     vertical-align: middle;
 }
 
-/* Specific background images for header icons (using your .png files) */
+
 .task-detail-modal .detail-meta-item .icon-posted-date {
-    background-image: url('../assets/icons/calendar-edit.png'); /* Using your calendar icon */
+    background-image: url('../assets/icons/calendar-edit.png');
 }
 .task-detail-modal .detail-meta-item .icon-deadline-date {
-    background-image: url('../assets/icons/timer.png'); /* Using your calendar icon */
+    background-image: url('../assets/icons/timer.png');
 }
 .task-detail-modal .detail-meta-item .icon-category-detail {
-    background-image: url('../assets/icons/clipboard.png'); /* Using your clipboard icon for category */
+    background-image: url('../assets/icons/clipboard.png');
 }
 
 
 .task-detail-modal .detail-task-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Responsive grid for stats */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
     gap: 15px;
     margin: 20px 0;
 }
 
 .task-detail-modal .stat-box {
-    background-color: #fdfdfd; /* Light background for each stat box */
-    border: 1px solid #c7c7c7; /* Subtle yellow border */
-    border-radius: 10px; /* Rounded corners */
+    background-color: #fdfdfd; 
+    border: 1px solid #c7c7c7; 
+    border-radius: 10px; 
     padding: 15px 10px;
     display: flex;
     flex-direction: column;
@@ -233,8 +232,8 @@
     color: #333;
 }
 
-.task-detail-modal .stat-box i { /* General icon styling within stat boxes */
-    width: 24px; /* Larger icons for stats */
+.task-detail-modal .stat-box i { 
+    width: 24px; 
     height: 24px;
     background-size: contain;
     background-repeat: no-repeat;
@@ -243,12 +242,12 @@
     display: block;
 }
 
-.task-detail-modal .stat-box span:first-of-type { /* The number/value */
+.task-detail-modal .stat-box span:first-of-type { 
     font-size: 1.3em;
-    color: #f3bd06; /* Highlight value in yellow */
+    color: #f3bd06; 
     margin-bottom: 5px;
 }
-.task-detail-modal .stat-box .stat-label { /* The label "Budget", "Duration", "Applicants" */
+.task-detail-modal .stat-box .stat-label { 
     font-size: 0.9em;
     color: #666;
 }
@@ -271,7 +270,7 @@
     background-position: center;
     margin-right: 8px;
     vertical-align: middle;
-
+    background-image: url('../assets/icons/book.png');
 }
 
 .task-detail-modal .task-description-text {

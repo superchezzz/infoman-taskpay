@@ -1,5 +1,3 @@
-/* taskpay-frontend/src/styles/ApplicantEditProfile.css */
-
 .applicant-edit-profile-container {
   max-width: 900px;
   margin: 20px auto;
@@ -36,7 +34,7 @@
   border: 1px solid #ddd;
   border-radius: 8px;
   margin-bottom: 15px;
-  overflow: hidden; /* For collapsing */
+  overflow: hidden; 
 }
 
 .section-header {
@@ -65,29 +63,29 @@
   color: #888;
 }
 
-/* Form layout for sub-components */
+/* sub-components */
 .personal-info-form-content,
 .educational-background-form-content,
 .work-experience-form-content,
 .certifications-form-content,
 .preferred-occupations-form-content,
 .resume-upload-content {
-  padding: 20px; /* Add padding for content inside the section */
+  padding: 20px;
 }
 
 .form-row {
   display: flex;
-  gap: 20px; /* Space between columns */
+  gap: 20px;
   margin-bottom: 15px;
 }
 
 .form-group {
-  margin-bottom: 15px; /* For individual fields not in a row */
-  flex: 1; /* Allows half-width to properly size */
+  margin-bottom: 15px; 
+  flex: 1; 
 }
 
 .form-group.half-width {
-  flex: 1; /* Occupy half the available space */
+  flex: 1; 
 }
 
 .form-group label {
@@ -105,21 +103,21 @@
 .form-group input[type="number"],
 .form-group select,
 .form-group textarea {
-  width: calc(100% - 22px); /* Account for padding and border */
+  width: calc(100% - 22px); 
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
-  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  box-sizing: border-box;
 }
 
 textarea {
-  resize: vertical; /* Allow vertical resizing for textareas */
+  resize: vertical; 
 }
 
 .save-continue-button,
 .add-another-button {
-  background-color: #fdd835; /* Yellowish color from screenshots */
+  background-color: #fdd835; 
   color: #333;
   padding: 10px 20px;
   border: none;
@@ -132,7 +130,7 @@ textarea {
 
 .save-continue-button:hover,
 .add-another-button:hover {
-  background-color: #fbc02d; /* Slightly darker yellow on hover */
+  background-color: #fbc02d; 
 }
 
 .edit-profile-button {
@@ -141,7 +139,7 @@ textarea {
   margin-top: 30px;
   font-size: 18px;
   font-weight: bold;
-  background-color: #fdd835; /* Yellowish color */
+  background-color: #fdd835; 
   color: #333;
   padding: 15px 20px;
   border-radius: 5px;
@@ -153,7 +151,7 @@ textarea {
   background-color: #fbc02d;
 }
 
-/* Specific styles for repeated entries (Education, Work Exp, Certs) */
+/* Education, Work Exp, Certs */
 .education-entry-card,
 .work-experience-entry-card,
 .certification-entry-card {
@@ -188,7 +186,7 @@ textarea {
     color: #444;
 }
 
-/* Resume Upload Styles */
+/* Resume Upload */
 .resume-upload-box {
   border: 2px dashed #ccc;
   padding: 40px;
@@ -220,7 +218,7 @@ textarea {
 
 .browse-files-button {
   background-color: #eee;
-  color: #555;
+  color: black;
   border: 1px solid #ddd;
   padding: 8px 15px;
   border-radius: 5px;
@@ -242,7 +240,7 @@ textarea {
   color: #333;
 }
 
-/* Preferred Occupations Tags */
+/* Preferred Occupation */
 .tags-container {
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -257,7 +255,7 @@ textarea {
   flex-grow: 1;
   border: none;
   padding: 5px 0;
-  min-width: 100px; /* Allow some room to type */
+  min-width: 100px;
 }
 
 .tags-container input[type="text"]:focus {
@@ -291,9 +289,9 @@ textarea {
   color: #333;
 }
 
-/* Profile Preview Styles */
+/* Profile Preview */
 .profile-preview-container {
-  padding: 0 20px; /* Consistent padding with form content */
+  padding: 0 20px; 
 }
 
 .section-header-preview {
@@ -311,7 +309,7 @@ textarea {
 .preview-details-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 10px 20px; /* Row gap, Column gap */
+    gap: 10px 20px; 
     margin-bottom: 20px;
 }
 
@@ -320,7 +318,7 @@ textarea {
 }
 
 .preview-details-grid .grid-span-2 {
-    grid-column: span 2; /* Make this item span two columns */
+    grid-column: span 2; 
 }
 
 .education-entry-preview,

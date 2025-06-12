@@ -54,8 +54,6 @@ function ApplicantDashboard() {
     // eslint-disable-next-line no-unused-vars
     const [availableTasksLimit, setAvailableTasksLimit] = useState(10); // Define items per page, e.g., 5
     
-    // --- CHANGE 2: The 'taskHistory' state and its pagination are no longer needed.
-    // They have been removed.
 
     const [documents, setDocuments] = useState(null);
 

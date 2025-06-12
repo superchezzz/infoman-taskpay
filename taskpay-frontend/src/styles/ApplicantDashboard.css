@@ -52,15 +52,17 @@
 
 .applicant-dashboard-body-container{
     gap: 30px;
-    align-items: center;
+    align-items: flex-start; 
     justify-content: center;
+    display: flex; 
 }
 
 .my-profile-container{
     background-color: #f8f8ff;
     width: 420px;
-    height: 570px;
+    height: fit-content;
     padding-top: 30px;
+    padding-bottom: 30px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -82,10 +84,11 @@
 .my-profile-info-container{
     background-color: white;
     width: 362px;
-    height: 360px;
+    height: fit-content;
     margin-left: auto;
     margin-right: auto;
     padding-top: 15px;
+    padding-bottom: 15px;
     display: flex;
     flex-direction: column;
 }
@@ -152,7 +155,7 @@
 .my-task-application-container{
     background-color: #f8f8ff;
     width: 810px;
-    height: 570px;
+    height: 437px;
     padding: 30px;
     overflow-y: auto;
     max-height: 600px;
@@ -181,4 +184,20 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.finish-task-button {
+    background-color: #5cb85c; 
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease; 
+    }
+    
+.finish-task-button:hover {
+    background-color: #4cae4c; /* Darker green on hover */
 }

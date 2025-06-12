@@ -43,22 +43,26 @@ const ProfilePreview = ({ profileData, allCategories, allLocations }) => {
       </div>
 
       <div className="preview-section">
-        <div className="section-header-preview">
-          <h3>Educational Background</h3>
+    <div className="section-header-preview">
+      <h3>Educational Background</h3>
+    </div>
+    {profileData.Educations?.length > 0 ? (
+      profileData.Educations.map((edu, index) => (
+        <div key={index} className="education-entry-preview">
+          {/* FIX: Displays "Education_Level at School" */}
+          <p><strong>{edu.Education_Level || 'N/A'} at {edu.School || 'N/A'}</strong></p>
+
+          {/* FIX: Displays "Course: N/A" on a new line */}
+          <p>Course: {edu.Course || 'N/A'}</p>
+
+          <p>Graduated: {edu.Yr_Grad || 'N/A'}</p>
+          {edu.Awards && <p>Award: {edu.Awards}</p>}
         </div>
-        {profileData.Educations?.length > 0 ? (
-          profileData.Educations.map((edu, index) => (
-            <div key={index} className="education-entry-preview">
-              <p><strong>{edu.Educational_Attainment || 'N/A'} in {edu.Course || 'N/A'}</strong></p>
-              <p>{edu.Institution || 'N/A'}</p>
-              <p>Graduated: {edu.Graduation_Year || 'N/A'}</p>
-              {edu.Award && <p>Award: {edu.Award}</p>}
-            </div>
-          ))
-        ) : (
-          <p>No educational background added.</p>
-        )}
-      </div>
+      ))
+      ) : (
+        <p>No educational background added.</p>
+      )}
+    </div>
 
       <div className="preview-section">
         <div className="section-header-preview">

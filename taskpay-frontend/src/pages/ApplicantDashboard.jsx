@@ -311,6 +311,33 @@ function ApplicantDashboard() {
         }
     };
 
+    const handleCompleteTask = async (task) => {
+        if (window.confirm(`Are you sure you want to mark "${task.title}" as finished? This action is final.`)) {
+            try {
+                const authToken = localStorage.getItem('authToken');
+                const api = axios.create({
+                    baseURL: 'http://localhost:3001/api',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                await api.post(`/applications/${task.id}/complete`);
+                alert(`Task '${task.title}' has been successfully marked as completed!`);
+
+                // Move the task from the active list to the history list
+                const applicationToMove = activeApplications.find(app => app.ApplicationID === task.id);
+                if (applicationToMove) {
+                    setActiveApplications(prev => prev.filter(app => app.ApplicationID !== task.id));
+                    setHistoricalApplications(prev => [...prev, { ...applicationToMove, Status: 'Completed' }]);
+                }
+                
+                setIsMyTaskDetailModalOpen(false); // Close the modal
+            } catch (apiError) {
+                console.error("Error completing task:", apiError);
+                alert(`Failed to complete task. ${apiError.response?.data?.message || ''}`);
+            }
+        }
+    };
+
 
     return (
         <div className="applicant-dashboard-container min-h-screen">
@@ -500,8 +527,11 @@ function ApplicantDashboard() {
                             )}
     
                             {currentViewedTask.status === 'InProgress' && (
-                                <button className="update-progress-button">
-                                Submit for Review
+                                <button
+                                    className="finish-task-button" // You can style this new class
+                                    onClick={() => handleCompleteTask(currentViewedTask)}
+                                >
+                                Finish Task
                                 </button>
                             )}
                         </div>

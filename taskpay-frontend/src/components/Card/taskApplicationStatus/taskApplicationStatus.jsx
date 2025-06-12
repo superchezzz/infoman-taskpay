@@ -18,7 +18,7 @@ const taskApplicationStatus = ({ application, onView }) => {
         <h3 className="job-title">{application.TaskDetails?.Title || 'N/A'}</h3>
         {/* The status pill is now the primary status indicator */}
         <span className={getStatusPillClass(application.Status)}>
-          {application.Status || 'Unknown'}
+          {application.Status === 'InProgress' ? 'In Progress' : application.Status || 'Unknown'}
         </span>
       </div>
 

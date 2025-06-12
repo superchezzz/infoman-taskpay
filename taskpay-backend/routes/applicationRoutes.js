@@ -221,18 +221,36 @@ router.post('/:applicationId/start', protect, authorize('applicant'), async (req
 router.post('/:applicationId/complete', protect, authorize('applicant'), async (req, res) => {
     const { applicationId } = req.params;
     const applicantId = req.user.UserID;
+    const t = await sequelize.transaction(); // Use a transaction for safety
+
     try {
         const { error, status, application } = await findApplicationAndVerifyApplicant(applicationId, applicantId);
-        if (error) return res.status(status).json({ message: error });
+        if (error) {
+            await t.rollback();
+            return res.status(status).json({ message: error });
+        }
+
+        // Only allow completion if the task is InProgress
         if (application.Status !== 'InProgress') {
+            await t.rollback();
             return res.status(400).json({ message: `Task cannot be completed. Status is: ${application.Status}.` });
         }
-        application.Status = 'SubmittedForReview';
-        await application.save();
-        res.status(200).json({ message: 'Task submitted for review.', application });
+
+        // Update both the application and the main task status to 'Completed'
+        application.Status = 'Completed';
+        await application.save({ transaction: t });
+        
+        await Task.update(
+            { TaskStatus: 'Completed' },
+            { where: { TaskID: application.Task_ID }, transaction: t }
+        );
+
+        await t.commit();
+        res.status(200).json({ message: 'Task marked as completed!', application });
     } catch (error) {
+        await t.rollback();
         console.error('Complete Task Error:', error);
-        res.status(500).json({ message: 'Server error.', error: error.message });
+        res.status(500).json({ message: 'Server error while completing task.', error: error.message });
     }
 });
 

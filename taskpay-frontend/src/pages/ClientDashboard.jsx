@@ -71,6 +71,128 @@ const EditTaskModal = ({ task, onClose, onUpdate }) => {
     );
 };
 
+const ApplicantInfoModal = ({ applicant, onClose }) => {
+    if (!applicant) return null;
+
+    // A helper to safely access nested data
+    const getDetail = (path, fallback = 'N/A') => {
+        return path.reduce((obj, key) => (obj && obj[key] !== 'undefined') ? obj[key] : undefined, applicant) || fallback;
+    };
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="info-modal-content" onClick={e => e.stopPropagation()}>
+                <div className="info-modal-header">
+                    <h2>Applicant Profile</h2>
+                    <button className="close-button" onClick={onClose}>&times;</button>
+                </div>
+                <div className="info-modal-body">
+                    <div className="info-section">
+                        <h3>{getDetail(['name'])}</h3>
+                        <p><strong>Skills:</strong> {getDetail(['skills'], []).join(', ') || 'No skills listed'}</p>
+                    </div>
+                    {/* You can add more sections here if you fetch more data in the future */}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const ProfilePreviewModal = ({ isLoading, profileData, onClose }) => {
+    // Helper function to get Category names directly from the profile data
+    const getCategoryNames = () => {
+        if (!profileData?.JobCategories || profileData.JobCategories.length === 0) return 'N/A';
+        return profileData.JobCategories.map(cat => cat.CategoryName).join(', ');
+    };
+
+    // Helper function to get Location names directly from the profile data
+    const getLocationNames = () => {
+        if (!profileData?.Locations || profileData.Locations.length === 0) return 'N/A';
+        return profileData.Locations.map(loc => loc.LocationName).join(', ');
+    };
+
+    return (
+        <div className="modal-overlay">
+            <div className="profile-preview-modal-content">
+                <div className="profile-preview-header">
+                    <h3>Applicant Profile</h3>
+                    <button className="close-button" onClick={onClose}>&times;</button>
+                </div>
+                <div className="profile-preview-body">
+                    {isLoading ? (
+                        <p>Loading profile...</p>
+                    ) : !profileData ? (
+                        <p>Could not load profile data.</p>
+                    ) : (
+                        // This JSX now uses the exact column names from your database schema
+                        <>
+                            <div className="preview-section">
+                                <div className="section-header-preview"><h3>Personal Information</h3></div>
+                                <div className="preview-details-grid">
+                                    <p><strong>Full Name:</strong> {[profileData.First_Name, profileData.Middle_Name, profileData.Surname, profileData.Suffix].filter(Boolean).join(' ')}</p>
+                                    <p><strong>Sex:</strong> {profileData.Sex || 'N/A'}</p>
+                                    <p><strong>Civil Status:</strong> {profileData.Civil_Status || 'N/A'}</p>
+                                    <p><strong>Date of birth:</strong> {profileData.DOB ? new Date(profileData.DOB).toLocaleDateString() : 'N/A'}</p>
+                                    <p><strong>Place of birth:</strong> {profileData.Place_of_Birth || 'N/A'}</p>
+                                    <p><strong>Disability:</strong> {profileData.Disability || 'None'}</p>
+                                    <p><strong>Employment status:</strong> {profileData.Emp_Status || 'N/A'}</p>
+                                    <p><strong>Email:</strong> {profileData.UserAccountDetails?.Email || 'N/A'}</p>
+                                    <p><strong>Phone Number:</strong> {profileData.Phone_Num || 'N/A'}</p>
+                                    <p className="grid-span-2"><strong>Address:</strong> {[profileData.HouseNum_Street, profileData.Brgy, profileData.City, profileData.Province].filter(Boolean).join(', ')}</p>
+                                </div>
+                            </div>
+
+                            <div className="preview-section">
+                                <div className="section-header-preview"><h3>Educational Background</h3></div>
+                                    {profileData.Educations?.length > 0 ? profileData.Educations.map((edu, index) => (
+                                        <div key={index} className="education-entry-preview">
+                                            {/* FIX: Correctly displays "Attainment at Institution" */}
+                                            <p><strong>{edu.Education_Level || 'N/A'} at {edu.School || 'N/A'}</strong></p>
+                                            {/* FIX: Displays "Course: N/A" on a new line when the course is blank */}
+                                            <p>Course: {edu.Course || 'N/A'}</p>
+                                            <p>Graduated: {edu.Yr_Grad || 'N/A'}</p>
+                                            {edu.Awards && <p>Award: {edu.Awards}</p>}
+                                        </div>
+                                )) : <p>No educational background added.</p>}
+                            </div>
+
+                            <div className="preview-section">
+                                <div className="section-header-preview"><h3>Work Experience</h3></div>
+                                {profileData.WorkExperiences?.length > 0 ? profileData.WorkExperiences.map((job, index) => (
+                                    <div key={index} className="work-experience-entry-preview">
+                                        <p><strong>{job.Position || 'N/A'}</strong> at {job.CompanyDetails?.Cmp_Name || 'N/A'}</p>
+                                        <p>{job.inclusive_date_from ? new Date(job.inclusive_date_from).toLocaleDateString() : 'N/A'} - {job.inclusive_date_to ? new Date(job.inclusive_date_to).toLocaleDateString() : 'Present'}</p>
+                                        <p>{job.Status || 'N/A'}</p>
+                                        {job.Responsibilities && <p>Responsibilities: {job.Responsibilities}</p>}
+                                    </div>
+                                )) : <p>No work experience added.</p>}
+                            </div>
+
+                            <div className="preview-section">
+                                <div className="section-header-preview"><h3>Certifications</h3></div>
+                                {profileData.Certifications?.length > 0 ? profileData.Certifications.map((cert, index) => (
+                                    <div key={index} className="certification-entry-preview">
+                                        <p><strong>{cert.Certifications || 'N/A'}</strong> from {cert.Issuing_Organization || 'N/A'}</p>
+                                        <p>Issued: {cert.course_date_from ? new Date(cert.course_date_from).toLocaleDateString() : 'N/A'} - {cert.course_date_to ? new Date(cert.course_date_to).toLocaleDateString() : 'Present'}</p>
+                                        {cert.Training_Duration && <p>Training duration: {cert.Training_Duration}</p>}
+                                    </div>
+                                )) : <p>No certifications added.</p>}
+                            </div>
+
+                            <div className="preview-section">
+                                <div className="section-header-preview"><h3>Preferences</h3></div>
+                                <p><strong>Job Categories:</strong> {getCategoryNames()}</p>
+                                <p><strong>Expected Salary Range:</strong> {profileData.Preferences?.Exp_Salary_Min || 'N/A'} - {profileData.Preferences?.Exp_Salary_Max || 'N/A'}</p>
+                                <p><strong>Preferred Locations:</strong> {getLocationNames()}</p>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 function ClientDashboard() {
     // --- State Management ---
     const [clientProfile, setClientProfile] = useState(null);
@@ -95,9 +217,7 @@ function ClientDashboard() {
     const [taskFilter, setTaskFilter] = useState('All Tasks');
 
     // State for pagination
-    const [currentTasksPage, setCurrentTasksPage] = useState(1);
     const [currentCompletedTasksPage, setCurrentCompletedTasksPage] = useState(1);
-    const tasksPerPage = 3;
     const completedTasksPerPage = 2;
 
     // --- Modal State for Applicants ---
@@ -107,6 +227,16 @@ function ClientDashboard() {
     // Modal for editing tasks
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState(null);
+
+    // Modal for viewing applicant info
+    const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+    const [applicantToView, setApplicantToView] = useState(null);
+
+    //Modal for viewing applicant profile preview
+    const [isProfilePreviewOpen, setIsProfilePreviewOpen] = useState(false);
+    const [profileDataForModal, setProfileDataForModal] = useState(null);
+    const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+    
 
     // Helper function for header initials
     const getInitials = useCallback((name = '') => {
@@ -141,7 +271,7 @@ function ClientDashboard() {
             // Fetch all dashboard data concurrently
             const [summaryRes, tasksRes, completedTasksRes] = await Promise.allSettled([
                 api.get('/client/dashboard-summary'),
-                api.get(`/client/tasks?page=${currentTasksPage}&limit=${tasksPerPage}&status=${taskFilter}`),
+                api.get(`/client/tasks?status=${taskFilter}`),
                 api.get(`/client/completed-tasks?page=${currentCompletedTasksPage}&limit=${completedTasksPerPage}`)
             ]);
 
@@ -179,7 +309,7 @@ function ClientDashboard() {
         } finally {
             setIsLoading(false);
         }
-    }, [navigate, currentTasksPage, currentCompletedTasksPage, taskFilter]); // Dependencies for fetchDashboardData
+    }, [navigate, currentCompletedTasksPage, taskFilter]); // Dependencies for fetchDashboardData
 
     // --- useEffect for initial data load and re-fetching on dependencies ---
     useEffect(() => {
@@ -190,13 +320,6 @@ function ClientDashboard() {
         return allTasks;
     }, [allTasks]);
 
-    const indexOfLastTask = currentTasksPage * tasksPerPage;
-    const indexOfFirstTask = indexOfLastTask - tasksPerPage;
-    // --- FIX START: Add this line for currentTasks ---
-    const currentTasks = filteredTasks.slice(indexOfFirstTask, indexOfLastTask);
-    // --- FIX END ---
-    const totalTasksPages = Math.ceil(filteredTasks.length / tasksPerPage);
-    const paginateTasks = (pageNumber) => setCurrentTasksPage(pageNumber);
 
     const indexOfLastCompletedTask = currentCompletedTasksPage * completedTasksPerPage;
     const indexOfFirstCompletedTask = indexOfLastCompletedTask - completedTasksPerPage;
@@ -351,9 +474,26 @@ function ClientDashboard() {
         setJobTitle(''); setCategory(''); setBudget(''); setDescription(''); setDeadline(''); setLocation('');
     }, [jobTitle, category, budget, description, deadline, location, navigate, fetchDashboardData]);
 
-    const handleViewApplicantInfo = useCallback((applicantId) => {
-        navigate(`/client/applicant-info/${applicantId}`);
-    }, [navigate]);
+    const handleViewApplicantInfo = useCallback(async (applicantId) => {
+        setIsPreviewLoading(true);
+        setIsProfilePreviewOpen(true); // Open the modal immediately with a loading state
+        
+        const authToken = sessionStorage.getItem('authToken');
+        const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Authorization': `Bearer ${authToken}` } });
+        
+        try {
+            const response = await api.get(`/client/applicant-profile/${applicantId}`);
+            if (response.data.success) {
+                setProfileDataForModal(response.data); // Store all data: profile, categories, locations
+            }
+        } catch (error) {
+            console.error('Failed to fetch profile preview:', error);
+            alert('Could not load applicant profile.');
+            setIsProfilePreviewOpen(false); // Close modal on error
+        } finally {
+            setIsPreviewLoading(false);
+        }
+    }, []);
 
     if (isLoading) {
         return <div className="loading-state">Loading dashboard data...</div>;
@@ -410,11 +550,11 @@ function ClientDashboard() {
                         <div className="task-filter">
                             <select value={taskFilter} onChange={(e) => {
                                 setTaskFilter(e.target.value);
-                                setCurrentTasksPage(1); // Reset to first page on filter change
                             }}>
                                 <option value="All Tasks">All Tasks</option>
                                 <option value="Open Tasks">Open Tasks</option>
                                 <option value="Filled Tasks">Filled Tasks</option>
+                                <option value="In Progress Tasks">In Progress</option>
                                 <option value="Closed Tasks">Closed Tasks</option>
                             </select>
                         </div>
@@ -428,6 +568,7 @@ function ClientDashboard() {
                                     {task.status === 'closed' && <span className="status-badge closed task-card-status">Closed</span>}
                                     {task.status === 'filled' && <span className="status-badge filled task-card-status">Filled</span>}
                                     {task.status === 'open' && <span className="status-badge open task-card-status">Active</span>}
+                                    {task.status === 'in progress' && <span className="status-badge inprogress task-card-status">In Progress</span>}
                                     <div className="task-meta">
                                         <span>{task.location}</span> | <span>${task.budget}</span> | <span>Due: {task.dueDate}</span>
                                         {/* applicants will be an array, check its length */}
@@ -469,19 +610,6 @@ function ClientDashboard() {
                         ) : (
                             <p className="no-tasks">No tasks to display based on the current filter.</p>
                         )}
-                    </div>
-                    <div className="pagination">
-                        <button onClick={() => paginateTasks(currentTasksPage - 1)} disabled={currentTasksPage === 1}>Previous</button>
-                        {[...Array(totalTasksPages)].map((_, index) => (
-                            <button
-                                key={index + 1}
-                                onClick={() => paginateTasks(index + 1)}
-                                className={currentTasksPage === index + 1 ? 'active' : ''}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
-                        <button onClick={() => paginateTasks(currentTasksPage + 1)} disabled={currentTasksPage === totalTasksPages}>Next</button>
                     </div>
                 </div>
 
@@ -574,7 +702,7 @@ function ClientDashboard() {
                             {currentCompletedTasks.length > 0 ? (
                                 currentCompletedTasks.map(task => (
                                     <div key={task.id} className="completed-task-card">
-                                        <h3>{task.jobTitle} <span className="status-badge filled">Filled</span></h3>
+                                        <h3>{task.jobTitle} <span className="status-badge completed">Completed</span></h3>
                                         <p className="completed-task-meta">
                                             <span>{task.location}</span> | <span>${task.budget}</span> | <span>Duration: {task.duration}</span>
                                         </p>
@@ -608,7 +736,7 @@ function ClientDashboard() {
                     task={selectedTaskForApplicants}
                     onClose={() => setShowApplicantsModal(false)}
                     onHire={handleHireApplicant}
-                    onViewApplicantInfo={handleViewApplicantInfo}
+                    onViewApplicantInfo={handleViewApplicantInfo} // This now triggers the info modal
                 />
             )}
             {/* Edit Task Modal - conditionally rendered */}
@@ -617,6 +745,19 @@ function ClientDashboard() {
                     task={taskToEdit}
                     onClose={handleCloseEditModal}
                     onUpdate={handleUpdateTask}
+                />
+            )}
+            {isInfoModalOpen && applicantToView && (
+                <ApplicantInfoModal
+                    applicant={applicantToView}
+                    onClose={() => setIsInfoModalOpen(false)}
+                />
+            )}
+            {isProfilePreviewOpen && (
+                <ProfilePreviewModal
+                    isLoading={isPreviewLoading}
+                    profileData={profileDataForModal?.profileData}
+                    onClose={() => setIsProfilePreviewOpen(false)}
                 />
             )}
         </div>

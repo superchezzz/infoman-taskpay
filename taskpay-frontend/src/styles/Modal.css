@@ -264,14 +264,14 @@
 }
 .task-detail-modal .task-description-header .icon-description-detail {
     display: inline-block;
-    width: 20px; /* Icon size for description header */
+    width: 20px; 
     height: 20px;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     margin-right: 8px;
     vertical-align: middle;
-    background-image: url('../assets/icons/book.png'); /* Using clipboard for description icon */
+
 }
 
 .task-detail-modal .task-description-text {
@@ -280,13 +280,9 @@
     line-height: 1.6;
 }
 
-/* ========================================= */
-/* --- COMMON STYLES FOR TASK CARDS (Available & History) --- */
-/* These styles apply to both .available-task-card and .task-history-item components */
-/* ========================================= */
 
 .available-task-card,
-.task-history-list .task-history-item { /* Both components use this class */
+.task-history-list .task-history-item { 
     border: 1px solid rgb(200, 200, 200);
     border-radius: 8px;
     padding: 15px;
@@ -298,7 +294,7 @@
 .task-history-list .task-history-item h4 {
     margin-top: 0;
     margin-bottom: 8px;
-    color: #f3bd06; /* Task titles in yellow */
+    color: #f3bd06;
 }
 
 .available-task-card p,
@@ -308,7 +304,6 @@
     color: #666;
 }
 
-/* Common Task Card Header Row */
 .available-task-card .task-header-row {
     display: flex;
     justify-content: space-between;
@@ -344,7 +339,6 @@
     font-weight: bold;
 }
 
-/* Common Task Card Details Row (icons, text details) */
 .available-task-card .task-details-row {
     display: flex;
     flex-wrap: wrap;
@@ -360,7 +354,6 @@
     align-items: center;
 }
 
-/* Icon base styles */
 .available-task-card .detail-item .icon-graphic-design,
 .available-task-card .detail-item .icon-location,
 .available-task-card .detail-item .icon-budget,
@@ -375,7 +368,6 @@
     vertical-align: middle;
 }
 
-/* Specific icon background images (using your .png files) */
 .available-task-card .detail-item .icon-graphic-design {
     background-image: url('../assets/icons/clipboard.png');
 }
@@ -396,14 +388,9 @@
     color: #444;
 }
 
-/* ========================================= */
-/* --- AVAILABLE TASKS LIST SPECIFIC STYLES --- */
-/* (Styles unique to the list of available tasks, primarily button styles) */
-/* ========================================= */
-
 .available-tasks-list .task-actions {
     display: flex;
-    justify-content: flex-start; /* MODIFIED: Buttons on the left */
+    justify-content: flex-start; 
     gap: 10px;
     margin-top: 15px;
 }
@@ -419,7 +406,7 @@
 .available-tasks-list .task-actions .view-button {
     background-color: #fdfdfd;
     color: #333;
-    border: 1px solid #ebcf00; /* Added border for consistency */
+    border: 1px solid #ebcf00; 
 }
 .available-tasks-list .task-actions .view-button:hover {
     background-color: #dee2e6;
@@ -433,30 +420,18 @@
     background-color: #d1a500;
 }
 
-/* ========================================= */
-/* --- TASK HISTORY LIST SPECIFIC STYLES --- */
-/* (Styles unique to the list of historical tasks, including status tags) */
-/* ========================================= */
-
-.task-history-list .task-history-item-override {
-    /* This class is on the outer div of TaskHistoryItem.jsx, used for specific overrides if needed */
-    /* Currently, it mainly inherits from .available-task-card */
-}
-
-/* Task actions for cards in the 'Task History' list */
 .task-history-list .task-actions {
     display: flex;
-    justify-content: flex-start; /* Ensure left alignment for history buttons too */
-    align-items: center; /* Vertically align button and tag */
+    justify-content: flex-start;
+    align-items: center;
     gap: 10px;
     margin-top: 15px;
 }
 
-/* Styling for the history status tag (e.g., "Completed", "Rejected") */
 .task-history-list .history-status-tag {
-    padding: 8px 20px; /* ADJUSTED: Matches button padding */
+    padding: 8px 20px;
     border-radius: 5px;
-    font-size: 1em; /* ADJUSTED: Matches typical button font size */
+    font-size: 1em;
     font-weight: bold;
     color: white;
     text-transform: capitalize;
@@ -464,24 +439,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* If you decide to add an icon back later, you might add: */
-    /* background-position: 8px center; */
-    /* background-repeat: no-repeat; */
-    /* background-size: 16px; */
-    /* padding-left: 30px; /* Adjust padding if icon is added */
 }
 
-/* Specific colors for different history statuses */
 .task-history-list .history-status-tag.status-completed {
-    background-color: #28a745; /* Green */
+    background-color: #28a745; 
 }
 .task-history-list .history-status-tag.status-rejected,
 .task-history-list .history-status-tag.status-withdrawn,
 .task-history-list .history-status-tag.status-cancelled {
-    background-color: #dc3545; /* Red */
+    background-color: #dc3545; 
 }
 
-/* Ensure the 'View' button in history matches the other view buttons */
 .task-history-list .task-actions .view-button {
     padding: 8px 15px;
     border-radius: 5px;
@@ -496,7 +464,6 @@
     background-color: #e2e6ea;
 }
 
-/* Pagination */
 .pagination {
     display: flex;
     justify-content: center;
@@ -507,30 +474,29 @@
 
 .pagination button {
     padding: 8px 15px;
-    border: 1px solid rgba(243, 189, 6, 0.3); /* Yellow border */
+    border: 1px solid rgba(243, 189, 6, 0.3);
     background-color: #fff;
-    color: #f3bd06; /* Yellow text */
+    color: #f3bd06; 
     border-radius: 5px;
     cursor: pointer;
 }
 .pagination button:hover {
-    background-color: #fff8e1; /* Light yellow background on hover */
+    background-color: #fff8e1; 
     color: #d1a500;
 }
 .pagination span {
     padding: 8px 12px;
-    border: 1px solid rgba(243, 189, 6, 0.3); /* Yellow border */
+    border: 1px solid rgba(243, 189, 6, 0.3); 
     border-radius: 5px;
     cursor: pointer;
-    color: #f3bd06; /* Yellow text */
+    color: #f3bd06;
 }
 .pagination span.active {
-    background-color: #f3bd06; /* Active page in yellow */
+    background-color: #f3bd06; 
     color: white;
     border-color: #f3bd06;
 }
 
-/* My Documents Form */
 .my-documents-form div {
     margin-bottom: 15px;
 }
@@ -545,7 +511,7 @@
 .my-documents-form input {
     width: calc(100% - 20px);
     padding: 10px;
-    border: 1px solid rgba(243, 189, 6, 0.3); /* Yellow border for inputs */
+    border: 1px solid rgba(243, 189, 6, 0.3);
     border-radius: 5px;
     font-size: 1em;
 }
@@ -558,7 +524,7 @@
 }
 
 .my-documents-form .cancel-button {
-    background-color: #6c757d; /* Grey, retained for cancel */
+    background-color: #6c757d; 
     color: white;
     padding: 10px 20px; 
     border-radius: 10px;
@@ -568,7 +534,7 @@
 }
 
 .my-documents-form .update-documents-button {
-    background-color: #f3bd06; /* Yellow for Update Documents */
+    background-color: #f3bd06; 
     color: white;
     padding: 10px 20px; 
     border-radius: 10px;

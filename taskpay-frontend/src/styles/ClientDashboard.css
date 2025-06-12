@@ -135,9 +135,6 @@
     color: #2a2a2a;
 }
 
-.task-filter {
-    /* Styles for the select dropdown */
-}
 
 .task-filter select {
     padding: 8px 15px;
@@ -145,10 +142,9 @@
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
-    background-color: white; /* Ensure a white background for the dropdown */
+    background-color: white;
 }
 
-/* Hide the old button-based tabs */
 .task-tabs {
     display: none;
 }
@@ -170,28 +166,28 @@
 
 .task-card-status {
     position: absolute;
-    top: 15px; /* Adjust as needed */
-    right: 15px; /* Adjust as needed */
-    z-index: 10; /* Ensure it's above other content if needed */
-    padding: 0.3em 0.8em; /* Slightly more padding for pill shape */
-    border-radius: 15px; /* More rounded for pill shape */
-    font-size: 13px; /* Adjust font size for the badge */
+    top: 15px; 
+    right: 15px; 
+    z-index: 10;
+    padding: 0.3em 0.8em; 
+    border-radius: 15px; 
+    font-size: 13px; 
     text-transform: uppercase;
     font-weight: bold;
     letter-spacing: 0.5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
 }
 
 .task-card.filled-task {
-    border-left: 5px solid #fec400; /* Yellow border for filled tasks */
+    border-left: 5px solid #fec400;
 }
 
-.task-card.open-task { /* Renamed from active-task for clarity */
-    border-left: 5px solid #28a745; /* Green border for open/active tasks */
+.task-card.open-task { 
+    border-left: 5px solid #28a745;
 }
 
 .task-card.closed-task {
-    border-left: 5px solid #6c757d; /* Grey border for closed tasks */
+    border-left: 5px solid #6c757d;
 }
 
 .task-card h3 {
@@ -199,7 +195,7 @@
     font-weight: bold;
     margin-bottom: 10px;
     color: #2a2a2a;
-    display: flex; /* For status badge alignment */
+    display: flex; 
     align-items: center;
 }
 
@@ -248,25 +244,25 @@
 }
 
 .reopen-job-button {
-    background-color: #6c757d; /* Grey */
+    background-color: #6c757d; 
     color: white;
     border: 1px solid #6c757d;
 }
 
 .edit-button {
-    background-color: #28a745; /* Green */
+    background-color: #28a745; 
     color: white;
     border: 1px solid #28a745;
 }
 
 .mark-as-filled-button {
-    background-color: #fec400; /* Yellow */
+    background-color: #fec400; 
     color: #333;
     border: 1px solid #fec400;
 }
 
 .delete-button {
-    background-color: #dc3545; /* Red */
+    background-color: #dc3545;
     color: white;
     border: 1px solid #dc3545;
 }
@@ -440,29 +436,28 @@
     font-weight: bold;
 }
 
-/* New Status Badges for Task Cards */
-.status-badge { /* This general rule can remain for common styling */
-    font-size: 0.75em; /* This is less specific now that task-card-status defines size */
+
+.status-badge { 
+    font-size: 0.75em; 
     font-weight: bold;
-    /* padding, border-radius, text-transform handled by .task-card-status */
-    margin-left: 0.5em; /* Remove this margin, as it's absolutely positioned */
-    display: inline-block; /* Ensure it behaves correctly for padding */
+    margin-left: 0.5em;
+    display: inline-block;
     text-align: center;
-    white-space: nowrap; /* Prevent text wrapping */
+    white-space: nowrap; 
 }
 
 .status-badge.open {
-    background-color: #D9ECDA; /* Green */
+    background-color: #D9ECDA; 
     color: rgb(0, 0, 0);
 }
 
 .status-badge.filled {
-    background-color: #d4dde7; /* Purple/Dark Magenta from Figma for "Filled" status */
-    color: rgb(0, 0, 0); /* Changed from black for better contrast */
+    background-color: #d4dde7; 
+    color: rgb(0, 0, 0); 
 }
 
 .status-badge.closed {
-    background-color: #F1CED8; /* Red from Figma for "Closed" status */
+    background-color: #F1CED8; 
     color: rgb(0, 0, 0);
 }
 

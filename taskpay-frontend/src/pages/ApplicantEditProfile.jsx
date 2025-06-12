@@ -272,7 +272,7 @@ const handleArrayChange = (section, index, field, value) => {
                 Age: profileData.Age, Sex: profileData.Sex,
                 Civil_Status: profileData.Civil_Status, DOB: profileData.DOB,
                 Place_of_Birth: profileData.Place_of_Birth,
-                HouseNum_Street: profileData.House_No, // This mapping is correct for saving
+                HouseNum_Street: profileData.House_No, 
                 Brgy: profileData.Brgy, City: profileData.City,
                 Province: profileData.Province, TIN_No: profileData.TIN_No,
                 SSS_No: profileData.SSS_No, Philhealth_No: profileData.Philhealth_No,

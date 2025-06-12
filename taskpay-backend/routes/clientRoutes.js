@@ -262,7 +262,7 @@ router.get('/completed-tasks', async (req, res) => {
 // @desc    A logged-in client creates a new task
 // @access  Private (Client only)
 router.post('/tasks', async (req, res) => {
-    const { jobTitle, category, budget, description, deadline, location} = req.body;
+    const { jobTitle, category, budget, description, deadline, location, duration } = req.body;
 
     // Basic validation
     if (!jobTitle || !description || !budget || !category || !deadline || !location) {
@@ -288,6 +288,7 @@ router.post('/tasks', async (req, res) => {
             Category: category,
             Location: location,
             Deadline: new Date(deadline), 
+            Duration: duration,
             TaskStatus: 'Open', // Default status for new tasks
             PostedDate: new Date()
         });

@@ -212,6 +212,7 @@ function ClientDashboard() {
     const [description, setDescription] = useState('');
     const [deadline, setDeadline] = useState('');
     const [location, setLocation] = useState('');
+    const [duration, setDuration] = useState('');
 
     // State for filtering tasks
     const [taskFilter, setTaskFilter] = useState('All Tasks');
@@ -448,13 +449,14 @@ function ClientDashboard() {
     const handlePostTask = useCallback(async (e) => {
         e.preventDefault();
 
-        const newTaskPayload = { // Data to send to backend
+        const newTaskPayload = {
             jobTitle,
             category,
             budget: parseInt(budget),
             description,
             deadline,
             location,
+            duration, 
         };
 
         const authToken = sessionStorage.getItem('authToken');
@@ -471,8 +473,8 @@ function ClientDashboard() {
         }
 
         // Reset form fields
-        setJobTitle(''); setCategory(''); setBudget(''); setDescription(''); setDeadline(''); setLocation('');
-    }, [jobTitle, category, budget, description, deadline, location, navigate, fetchDashboardData]);
+        setJobTitle(''); setCategory(''); setBudget(''); setDescription(''); setDeadline(''); setLocation(''); setDuration('');
+    }, [jobTitle, category, budget, description, deadline, location, duration, navigate, fetchDashboardData]);
 
     const handleViewApplicantInfo = useCallback(async (applicantId) => {
         setIsPreviewLoading(true);
@@ -687,10 +689,23 @@ function ClientDashboard() {
                                     required
                                 />
                             </div>
+                            
+                            <div className="form-group">
+                                <label htmlFor="duration">Duration</label>
+                                <input
+                                    type="text"
+                                    id="duration"
+                                    value={duration}
+                                    onChange={(e) => setDuration(e.target.value)}
+                                    placeholder="e.g., 1 month, 2 weeks"
+                                    required
+                                />
+                            </div>
+
                             <div className="form-actions">
                                 <button type="submit" className="post-task-button">Post Task</button>
                                 <button type="button" className="cancel-button" onClick={() => {
-                                    setJobTitle(''); setCategory(''); setBudget(''); setDescription(''); setDeadline(''); setLocation('');
+                                    setJobTitle(''); setCategory(''); setBudget(''); setDescription(''); setDeadline(''); setLocation(''); setDuration('');
                                 }}>Cancel</button>
                             </div>
                         </form>

@@ -153,6 +153,9 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    /* --- ADD THESE TWO LINES --- */
+    max-height: 800px; /* Or any height you prefer */
+    overflow-y: auto;  /* This adds the scrollbar when content exceeds the max-height */
 }
 
 .task-card {
@@ -161,7 +164,6 @@
     border-radius: 8px;
     padding: 20px;
     position: relative;
-    overflow: hidden;
 }
 
 .task-card-status {
@@ -567,4 +569,157 @@
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
+}
+
+.info-modal-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.info-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.info-modal-header h2 {
+    margin: 0;
+    font-size: 22px;
+    color: #343a40;
+}
+
+.info-modal-body .info-section h3 {
+    font-size: 20px;
+    color: #2a2a2a;
+    margin-bottom: 10px;
+}
+
+.info-modal-body .info-section p {
+    font-size: 16px;
+    color: #495057;
+    margin: 5px 0;
+}
+
+.profile-preview-modal-content {
+    background-color: #fff;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px; /* Wider for detailed view */
+    height: 85vh; /* Set a max height */
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0; /* Prevents header from shrinking */
+}
+
+.profile-preview-header h3 {
+    margin: 0;
+    font-size: 20px;
+    color: #333;
+}
+
+/* This is the new scrollable container for the main content */
+.profile-preview-body {
+    overflow-y: auto; /* Make the content scrollable */
+    padding-top: 20px;
+}
+
+/* These styles are copied and adapted from your ApplicantEditProfile.css */
+.profile-preview-body .section-header-preview {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.profile-preview-body .section-header-preview h3 {
+  font-size: 20px;
+  color: #333;
+  margin: 0;
+}
+
+.profile-preview-body .preview-details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 10px 20px; /* Row gap, Column gap */
+    margin-bottom: 20px;
+}
+
+.profile-preview-body .preview-details-grid p {
+    margin: 0;
+    font-size: 15px;
+    color: #555;
+    line-height: 1.5;
+}
+
+.profile-preview-body .preview-details-grid strong {
+    color: #333;
+}
+
+.profile-preview-body .preview-details-grid .grid-span-2 {
+    grid-column: span 2;
+}
+
+.profile-preview-body .education-entry-preview,
+.profile-preview-body .work-experience-entry-preview,
+.profile-preview-body .certification-entry-preview {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #eee;
+}
+
+.profile-preview-body .education-entry-preview:last-child,
+.profile-preview-body .work-experience-entry-preview:last-child,
+.profile-preview-body .certification-entry-preview:last-child {
+    border-bottom: none;
+}
+
+.profile-preview-body .preview-section p {
+    margin-bottom: 8px;
+    color: #555;
+    line-height: 1.5;
+    font-size: 15px;
+}
+
+.profile-preview-body .resume-filename {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.profile-preview-body .view-resume-button {
+    background-color: #007bff;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
+.profile-preview-body .view-resume-button:hover {
+    background-color: #0056b3;
+}
+
+.status-badge.inprogress {
+    background-color: #17a2b8; /* A distinct blue/cyan color */
+    color: white;
+}
+
+.status-badge.completed {
+    background-color: #6f42c1; /* A distinct purple color */
+    color: white;
 }

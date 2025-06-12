@@ -123,3 +123,8 @@
     color: white;
     border: none;
 }
+
+.status-inprogress {
+    background-color: #F0F4F7; /* Ash grey blue */
+    color: #607D8B;
+}

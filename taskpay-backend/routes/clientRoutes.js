@@ -98,41 +98,41 @@ router.get('/dashboard-summary', async (req, res) => {
 
 
 // @route   GET /api/client/tasks
-// @desc    Get client's task listings (Open, Filled, Closed, All) with applicants
+// @desc    Get client's task listings (sends ALL tasks for the filter)
 // @access  Private (Client role)
 router.get('/tasks', async (req, res) => {
     try {
         const clientId = req.user.UserID;
-        const { status, page = 1, limit = 3 } = req.query; // Default pagination
-        const offset = (page - 1) * limit;
+        const { status } = req.query; // e.g., "Open Tasks", "In Progress Tasks"
 
         let whereClause = { ClientID: clientId };
-        if (status && status !== 'All Tasks') {
-            const statusMap = {
-                'Open Tasks': 'Open',
-                'Filled Tasks': 'Filled',
-                'Closed Tasks': 'Closed',
-            };
-            if (statusMap[status]) {
-                whereClause.TaskStatus = statusMap[status];
-            }
+
+        if (status === 'Open Tasks') {
+            whereClause.TaskStatus = 'Open';
+        } else if (status === 'Filled Tasks') {
+            whereClause.TaskStatus = 'Filled';
+        } else if (status === 'In Progress Tasks') {
+            whereClause.TaskStatus = 'In Progress';
+        } else if (status === 'Closed Tasks') {
+            whereClause.TaskStatus = 'Closed';
+        } else {
+            // This is the default case for "All Tasks"
+            // It includes all statuses that are not 'Completed', 'Paid', or 'Closed'
+            whereClause.TaskStatus = { [Op.in]: ['Open', 'Filled', 'In Progress', 'SubmittedForReview'] };
         }
 
-        const { count, rows: tasks } = await Task.findAndCountAll({
+        // We now use `findAll` instead of `findAndCountAll` since we are fetching all records
+        const tasks = await Task.findAll({
             where: whereClause,
-            limit: parseInt(limit),
-            offset: parseInt(offset),
             order: [['PostedDate', 'DESC']],
             include: [{
                 model: TaskApplication,
                 as: 'Applications',
                 attributes: ['ApplicationID', 'Status', 'Applicant_ID'],
                 where: {
-                    Status: {
-                        [Op.in]: ['Pending', 'Approved', 'Shortlisted', 'InProgress', 'SubmittedForReview']
-                    }
+                    Status: { [Op.in]: ['Pending', 'Approved', 'Shortlisted', 'InProgress', 'SubmittedForReview'] }
                 },
-                required: false, 
+                required: false,
                 include: [{
                     model: User,
                     as: 'ApplicantDetails',
@@ -152,6 +152,7 @@ router.get('/tasks', async (req, res) => {
             }],
         });
 
+        // The formatting logic you have is correct
         const formattedTasks = tasks.map(task => {
             let selectedApplicantName = task.SelectedApplicantName || null;
             let selectedApplicantId = task.SelectedApplicantID || null;
@@ -183,12 +184,11 @@ router.get('/tasks', async (req, res) => {
             };
         });
 
+        // FIX: The response no longer includes pagination details like totalPages
         res.status(200).json({
             success: true,
             tasks: formattedTasks,
-            totalTasks: count,
-            totalPages: Math.ceil(count / limit),
-            currentPage: parseInt(page)
+            totalTasks: tasks.length // The total is now just the length of the returned array
         });
 
     } catch (error) {
@@ -209,7 +209,7 @@ router.get('/completed-tasks', async (req, res) => {
         const { count, rows: tasks } = await Task.findAndCountAll({
             where: {
                 ClientID: clientId,
-                TaskStatus: { [Op.in]: ['Completed', 'Filled'] }
+                TaskStatus: { [Op.in]: ['Completed'] }
             },
             limit: parseInt(limit),
             offset: parseInt(offset),
@@ -262,7 +262,7 @@ router.get('/completed-tasks', async (req, res) => {
 // @desc    A logged-in client creates a new task
 // @access  Private (Client only)
 router.post('/tasks', async (req, res) => {
-    const { jobTitle, category, budget, description, deadline, location } = req.body;
+    const { jobTitle, category, budget, description, deadline, location, duration } = req.body;
 
     // Basic validation
     if (!jobTitle || !description || !budget || !category || !deadline || !location) {
@@ -287,7 +287,8 @@ router.post('/tasks', async (req, res) => {
             Budget: parseFloat(budget),
             Category: category,
             Location: location,
-            Deadline: new Date(deadline), // Ensure date format is correct for DB
+            Deadline: new Date(deadline), 
+            Duration: duration,
             TaskStatus: 'Open', // Default status for new tasks
             PostedDate: new Date()
         });
@@ -571,12 +572,71 @@ router.put('/tasks/:taskId/hire', async (req, res) => {
     }
 });
 
-// The following routes are client-specific routes used by ClientDashboard.jsx
-// But they are not part of /api/tasks, they are part of /api/client and handled by clientRoutes.js
-// We are moving them here to align with the clientRoutes.js module.exports.
-// Note: Some of these were redundant with methods in taskRoutes.js,
-// so careful aliasing/refactoring may be needed.
-// For now, these handlers will be unique to clientRoutes.js
+/// @route   GET /api/client/applicant-profile/:applicantId
+// @desc    Client gets the full profile details of a specific applicant
+// @access  Private (Client role)
+router.get('/applicant-profile/:applicantId', async (req, res) => {
+    try {
+        const { applicantId } = req.params;
+
+        // This is the fully corrected database query
+        const applicantProfile = await db.Applicant.findOne({
+            where: { Applicant_ID: applicantId },
+            include: [
+                { 
+                    model: db.User, 
+                    as: 'UserAccountDetails', 
+                    attributes: ['Email'] 
+                },
+                { 
+                    model: db.Education, 
+                    as: 'Educations' 
+                },
+                { 
+                    model: db.WorkExperience, 
+                    as: 'WorkExperiences',
+                    // THIS WAS THE MISSING PIECE: We also need to include the company details for each work experience
+                    include: [{
+                        model: db.CompanyInformation,
+                        as: 'CompanyDetails'
+                    }]
+                },
+                { 
+                    model: db.Certification, 
+                    as: 'Certifications' 
+                },
+                { 
+                    model: db.Preference, 
+                    as: 'Preferences'
+                },
+                { 
+                    model: db.JobCategory, 
+                    as: 'JobCategories', 
+                    through: { attributes: [] } 
+                },
+                { 
+                    model: db.Location, 
+                    as: 'Locations', 
+                    through: { attributes: [] } 
+                }
+            ]
+        });
+
+        if (!applicantProfile) {
+            return res.status(404).json({ message: 'Applicant profile not found.' });
+        }
+
+        res.status(200).json({
+            success: true,
+            profileData: applicantProfile,
+        });
+
+    } catch (error) {
+        // It's helpful to log the full error on the backend for debugging
+        console.error('Error fetching applicant profile for client:', error);
+        res.status(500).json({ message: 'Server error while fetching applicant profile.' });
+    }
+});
 
 // This file effectively acts as a clientController now
 

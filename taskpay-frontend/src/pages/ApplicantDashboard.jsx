@@ -82,7 +82,6 @@ function ApplicantDashboard() {
     };
 
     // --- CHANGE 3: The fetchTaskHistory function is no longer needed and has been deleted.
-    // The data now comes from the main fetchDashboardData call.
 
     useEffect(() => {
         const fetchDashboardData = async () => {

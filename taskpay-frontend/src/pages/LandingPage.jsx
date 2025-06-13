@@ -19,9 +19,7 @@ import "../styles/LandingPage.css";
 import { useNavigate } from "react-router-dom";
 
 function LandingPage() {
-    // The activeTab state already exists to track the UI toggle.
-    // 'hireTalent' will map to the backend role 'client'.
-    // 'findTask' will map to the backend role 'applicant'.
+    // Track which tab is active: 'hireTalent' (client) or 'findTask' (applicant)
     const [activeTab, setActiveTab] = useState("hireTalent");
     const nav = useNavigate();
 
@@ -38,24 +36,12 @@ function LandingPage() {
         return "";
     };
 
-    /**
-     * @function handleNavigation
-     * @description Determines the selected role based on the active tab and navigates
-     * to the target path (e.g., '/login' or '/signup'), passing the role
-     * in the navigation state.
-     * @param {string} path - The path to navigate to (e.g., '/login' or '/signup').
-     */
+    // Navigates to login or signup, passing the selected role in state
     const handleNavigation = (path) => {
-        // Map the frontend tab state to the backend role names
         const role = activeTab === "hireTalent" ? "client" : "applicant";
-
-        // The key for login is 'loginRole' and for signup is 'selectedRole'
-        // to match what the respective components expect.
         const stateToPass = path === '/login'
             ? { loginRole: role }
             : { selectedRole: role };
-        
-        console.log(`Navigating to ${path} with role: ${role}`); // For debugging
         nav(path, { state: stateToPass });
     };
 
@@ -68,7 +54,6 @@ function LandingPage() {
 
             <div className='auth-card items-center justify-items-center'>
                 <div className="hf-button flex row gap-5 color-black">
-                    {/* The toggle buttons remain the same, just updating local state */}
                     <button className={`toggle-btn ${activeTab === "hireTalent" ? "active" : ""}`} onClick={() => handleTabClick("hireTalent")}>Hire Talent</button>
                     <button className={`toggle-btn ${activeTab === "findTask" ? "active" : ""}`} onClick={() => handleTabClick("findTask")}>Find Task</button>
                 </div>
@@ -76,7 +61,6 @@ function LandingPage() {
                 <p className="quote text-white text-[16px] font-bold italic leading-tight ">{getQuote()}</p>
 
                 <div className="reg-button flex row gap-5">
-                    {/* The onClick handlers now call our new handleNavigation function */}
                     <button className="login-button" onClick={() => handleNavigation('/login')}>Login</button>
                     <button className="signup-button" onClick={() => handleNavigation('/signup')}>Sign Up</button>
                 </div>

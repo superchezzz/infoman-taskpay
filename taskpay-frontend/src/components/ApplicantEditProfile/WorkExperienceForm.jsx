@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 const WorkExperienceForm = ({ workExperience, onInputChange, onAddWorkExperience, onRemoveWorkExperience, onSaveAndContinue }) => {
-  // Local state for the "Add New" form, using backend field names
   const [newPosition, setNewPosition] = useState({
     Position: '',
     Cmp_Name: '',

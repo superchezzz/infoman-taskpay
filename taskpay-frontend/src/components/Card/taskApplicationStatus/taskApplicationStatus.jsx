@@ -1,12 +1,7 @@
 import React from 'react';
 import './taskApplicationStatus.css';
 
-// Note: It's a React convention to name components with PascalCase (e.g., TaskApplicationStatus)
-// but we will stick to your original naming to avoid breaking imports.
 const taskApplicationStatus = ({ application, onView }) => {
-  // Props are now the entire 'application' object and the 'onView' function
-
-  // Helper function to get a CSS class from the status string
   const getStatusPillClass = (status) => {
     const statusClass = status ? status.toLowerCase().replace(/\s+/g, '-') : 'unknown';
     return `status-pill status-${statusClass}`;
@@ -16,7 +11,6 @@ const taskApplicationStatus = ({ application, onView }) => {
     <div className="task-application-status-card">
       <div className="card-header">
         <h3 className="job-title">{application.TaskDetails?.Title || 'N/A'}</h3>
-        {/* The status pill is now the primary status indicator */}
         <span className={getStatusPillClass(application.Status)}>
           {application.Status === 'InProgress' ? 'In Progress' : application.Status || 'Unknown'}
         </span>
@@ -30,7 +24,6 @@ const taskApplicationStatus = ({ application, onView }) => {
       </div>
 
       <div className="card-actions">
-        {/* We now only have one button, and it gets its action from the 'onView' prop */}
         <button className="card-button view-button" onClick={onView}>
           View
         </button>

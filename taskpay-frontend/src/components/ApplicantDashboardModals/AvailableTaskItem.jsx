@@ -1,4 +1,3 @@
-// taskpay-frontend/src/components/AvailableTaskItem.jsx
 import React from 'react';
 import { getClientInitials } from "../../utils/formatName.js";
 

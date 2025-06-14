@@ -1,7 +1,4 @@
-// taskpay-frontend/src/components/ResumeUpload.jsx
 import React, { useRef } from 'react';
-// You might want an icon for upload, for simplicity, I'm just using text for now
-// import { ReactComponent as UploadIcon } from '../assets/upload-icon.svg';
 
 const ResumeUpload = ({ resumeFile, onFileUpload }) => {
   const fileInputRef = useRef(null);

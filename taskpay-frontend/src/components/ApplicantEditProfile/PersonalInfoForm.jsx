@@ -8,7 +8,6 @@ const PersonalInfoForm = ({ personalInfo, onInputChange, onSaveAndContinue }) =>
   
   return (
     <div className="personal-info-form-content">
-      {/* --- NAME FIELDS --- */}
       <div className="form-row">
         <div className="form-group quarter-width">
           <label htmlFor="First_Name">First Name</label>

@@ -1,99 +1,82 @@
 /**
  * @file Login.jsx
- * @description Component for the user login page.
- * @date 2025-06-07
- *
  * @description
- * This component renders the login form. It handles user input for email and password,
- * and makes an API call to the backend login endpoint (`/api/auth/login`).
- *
- * It uses the 'loginRole' passed from a previous route (e.g., the landing page)
- * via React Router's location state to tell the backend which role the user
- * intends to log in as ('applicant' or 'client').
- *
- * Upon successful login, it stores the received user data and JWT token
- * in localStorage and navigates the user to their respective dashboard.
+ * Renders the user login page. This component provides a form for email and
+ * password authentication. It determines the user's intended role ('applicant' or 'client')
+ * from the navigation state and communicates this to the backend API. Upon successful
+ * authentication, it saves the session data (JWT, user info) to localStorage and
+ * redirects the user to their corresponding dashboard.
  */
 
 import React, { useState } from 'react';
-import axios from 'axios'; // Import axios for making API calls
+import axios from 'axios';
 import "../styles/Login.css";
 import { useNavigate, useLocation } from "react-router-dom";
 
 function Login() {
-    // State for form inputs
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    // State for handling errors and loading feedback
     const [formError, setFormError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
 
-    // The 'loginRole' should be passed from the landing page.
-    // Example from another component: navigate('/login', { state: { loginRole: 'applicant' } });
-    const loginRole = location.state?.loginRole || 'applicant'; // Default to 'applicant' if not provided
+    // The user's role is passed via location state from the page they clicked "Login" on.
 
-    /**
-     * @function handleSubmit
-     * @description Handles the form submission event.
-     * It sends a POST request to the backend login API endpoint with the form data.
-     * It also handles success and error responses from the backend.
-     */
+    const loginRole = location.state?.loginRole || 'applicant'; // Default to 'applicant' if state is not passed.
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFormError(''); // Reset error on new submission
-        setIsLoading(true); // Set loading state for user feedback
+        setFormError(''); // Reset previous errors on a new submission.
+        setIsLoading(true); // Provide visual feedback that the request is in progress.
 
         try {
-            // Prepare the data payload for the backend API
             const loginData = {
                 Email: email,
                 Password: password,
-                loginRole: loginRole // Pass the role context to the backend
+                loginRole: loginRole // Inform the backend which role the user is trying to log in as.
             };
 
-            // Make the API call to our backend login endpoint
             const response = await axios.post('http://localhost:3001/api/auth/login', loginData);
-
-            // If login is successful, the backend responds with a 200 status and data
             console.log('Login successful:', response.data);
 
-            // --- Handle successful login ---
-            // Store the received token and user data in localStorage to manage the session
-            localStorage.setItem('authToken', response.data.token);
-            localStorage.setItem('userData', JSON.stringify({
+            // Store session data to maintain the user's logged-in state.
+            sessionStorage.setItem('authToken', response.data.token);
+            sessionStorage.setItem('userData', JSON.stringify({
                 UserID: response.data.UserID,
                 Email: response.data.Email,
                 activeRole: response.data.activeRole
             }));
 
-            // Navigate to the appropriate dashboard based on the active role
-            if (response.data.activeRole === 'applicant') {
-                navigate('/applicant-dashboard'); // Ensure this route is defined in your React Router
-            } else if (response.data.activeRole === 'client') {
-                navigate('/client-dashboard'); // Future route for clients
-            } else if (response.data.activeRole === 'admin') {
-                navigate('/admin-dashboard'); // Future route for admins
-            } else {
-                navigate('/'); // Default fallback navigation
+            // Navigate to the correct dashboard based on the user's role.
+            switch (response.data.activeRole) {
+                case 'applicant':
+                    navigate('/applicant-dashboard');
+                    break;
+                case 'client':
+                    navigate('/client-dashboard');
+                    break;
+                case 'admin':
+                    navigate('/admin-dashboard'); // For future admin functionality
+                    break;
+                default:
+                    navigate('/'); // Fallback to the homepage if the role is unrecognized.
+                    break;
             }
 
         } catch (error) {
-            // Handle errors returned from the backend API (e.g., 401 Invalid Credentials)
+            // Display a user-friendly error message from the API response.
             console.error('Login failed:', error.response ? error.response.data : error.message);
-            // Set the formError state to display the specific error message from the backend
             setFormError(error.response?.data?.message || 'An unknown error occurred. Please try again.');
         } finally {
-            setIsLoading(false); // Reset loading state regardless of success or failure
+            // Ensure the loading state is reset whether the request succeeded or failed.
+            setIsLoading(false);
         }
     };
 
     return (
         <div className="login-container flex row min-h-screen items-center">
-            {/* Left container (brand info) - no functional changes needed */}
             <div className="login-left-container min-h-screen flex-6 rounded-r-[30px] items-center justify-items-center">
                 <svg onClick={() => navigate('/')} className="back-icon" width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M26.9834 3.33337H13.0167C6.95004 3.33337 3.33337 6.95004 3.33337 13.0167V26.9667C3.33337 33.05 6.95004 36.6667 13.0167 36.6667H26.9667C33.0334 36.6667 36.65 33.05 36.65 26.9834V13.0167C36.6667 6.95004 33.05 3.33337 26.9834 3.33337ZM22.9834 25C23.4667 25.4834 23.4667 26.2834 22.9834 26.7667C22.7334 27.0167 22.4167 27.1334 22.1 27.1334C21.7834 27.1334 21.4667 27.0167 21.2167 26.7667L15.3334 20.8834C14.85 20.4 14.85 19.6 15.3334 19.1167L21.2167 13.2334C21.7 12.75 22.5 12.75 22.9834 13.2334C23.4667 13.7167 23.4667 14.5167 22.9834 15L17.9834 20L22.9834 25Z" fill="#F3BD06"/>
@@ -102,11 +85,10 @@ function Login() {
                 <p className="text-white text-[30px] font-medium text-opacity-80">Your Skills. Their Needs. One Platform.</p>
             </div>
 
-            {/* Right container with the form */}
             <div className="login-right-container flex-4 justify rounded-tr-[20px] rounded-br-[20px]">
                 <div className="login-form-container color-black ">
                     <h1 className="login-text font-bold text-[40px]">Log In</h1>
-                    {/* Display general form errors from the backend here */}
+                    {/* Display API or validation errors to the user */}
                     {formError && <p className="form-error-message">{formError}</p>}
                     <form onSubmit={handleSubmit}>
                         <div className="login-form-group">
@@ -117,7 +99,7 @@ function Login() {
                             <label htmlFor="password" className="login-label text-[16px]">Password</label>
                             <input className="login-form-group-input w-[480px] h-[50px]"type="password" id="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required/>
                         </div>
-                        {/* Disable the button while the API call is in progress */}
+                        {/* Disable the button during the API call to prevent multiple submissions */}
                         <button type="submit" className="login-submit-button text-[16px] text-white" disabled={isLoading}>
                             {isLoading ? 'Logging In...' : 'Log In'}
                         </button>

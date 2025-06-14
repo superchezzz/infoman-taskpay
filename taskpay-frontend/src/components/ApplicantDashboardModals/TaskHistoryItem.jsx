@@ -1,8 +1,6 @@
-// taskpay-frontend/src/components/TaskHistoryItem.jsx
 import React from 'react';
 
 function TaskHistoryItem({ task, onView }) {
-  // Helper to format dates nicely, handles null dates
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {

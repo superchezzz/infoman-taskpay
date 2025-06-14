@@ -27,10 +27,10 @@ function App(){
         <Route path="/applicant-dashboard" element={<ApplicantDashboard />} />
         <Route path="/applicant-edit-profile" element={<ApplicantEditProfile />} />
 
-        {/* Existing Client Dashboard Route */}
+        {/*  Client Dashboard Route */}
         <Route path="/client-dashboard" element={<ClientDashboard />} />
 
-        {/* NEW ROUTE for Client View Applicant Info */}
+        {/* Client View Applicant Info */}
         {/* This route uses a URL parameter ':applicantId' which ClientViewApplicantInfo.jsx will read */}
         <Route path="/client/applicant-info/:applicantId" element={<ClientViewApplicantInfo />} />
 

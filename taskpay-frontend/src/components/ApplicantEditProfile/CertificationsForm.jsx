@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 const CertificationsForm = ({ certifications, onInputChange, onAddCertification, onRemoveCertification, onSaveAndContinue }) => {
-  // Local state for the "Add New" form, using backend field names
   const [newCertificate, setNewCertificate] = useState({
     Certification_Name: '',
     Issuing_Organization: '',

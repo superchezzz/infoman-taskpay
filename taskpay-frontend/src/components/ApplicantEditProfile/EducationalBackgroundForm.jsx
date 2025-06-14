@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 
 const EducationalBackgroundForm = ({ educationalBackground, onInputChange, onAddEducation, onRemoveEducation, onSaveAndContinue }) => {
-  // Local state for the "Add New" form, now using backend field names
   const [newEducation, setNewEducation] = useState({
     Educational_Attainment: '',
     Institution: '',
@@ -38,7 +37,6 @@ const EducationalBackgroundForm = ({ educationalBackground, onInputChange, onAdd
         <div key={index} className="education-entry-card">
           <div className="entry-header">
             <h3>Education Entry #{index + 1}</h3>
-            {/* ADDED: Remove button for existing entries */}
             <button onClick={() => onRemoveEducation(index)} className="remove-button">Remove</button>
           </div>
           <div className="form-group">

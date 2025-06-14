@@ -1,7 +1,7 @@
 import React from 'react';
 import Select from 'react-select';
 
-// Styles needed for the menuPortalTarget fix
+
 const portalStyles = {
     menuPortal: base => ({ ...base, zIndex: 9999 }) // Ensure dropdown appears on top of everything
 };

@@ -15,17 +15,7 @@ function ApplicantsModal({ task, onClose, onHire, onViewApplicantInfo }) {
         return 'US';
     }, []);
 
-    // Example of a function that *might* be moved here if it's more complex than a simple prop call
-    // For "Hire" and "View", it's better to pass handlers from parent (ClientDashboard.jsx)
-    // const handleViewResume = (resumeUrl) => {
-    //     // You might open a new tab directly
-    //     if (resumeUrl) {
-    //         window.open(resumeUrl, '_blank');
-    //     } else {
-    //         alert('Resume not available.');
-    //     }
-    // };
-
+    // This function can be used to handle the hiring logic, e.g., making an API call
     return (
         <div className="modal-overlay">
             <div className="applicants-modal-content">

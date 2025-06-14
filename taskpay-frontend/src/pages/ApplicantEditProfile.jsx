@@ -149,7 +149,6 @@ const handleArrayChange = (section, index, field, value) => {
                   updatedItem[field] = value;
           }
       } else if (section === 'WorkExperiences') {
-          // Your existing WorkExperiences mapping logic here
           switch (field) {
               case 'Start_Date': updatedItem.inclusive_date_from = value; updatedItem.Start_Date = value; break;
               case 'End_Date': updatedItem.inclusive_date_to = value; updatedItem.End_Date = value; break;
@@ -219,9 +218,6 @@ const handleArrayChange = (section, index, field, value) => {
             Awards: newItem.Award,
         };
     }
-    
-    // You can add similar 'if (section === ...)' blocks here for
-    // WorkExperience or Certifications if they have similar issues.
 
     setProfileData((prevData) => ({
         ...prevData,
@@ -247,8 +243,7 @@ const handleArrayChange = (section, index, field, value) => {
   };
 
   const handleSaveAndContinue = (nextSection) => {
-    // Here you would typically perform validation for the current section
-    // and then update the activeSection
+ 
     setActiveSection(nextSection);
   };
 
@@ -309,7 +304,6 @@ const handleArrayChange = (section, index, field, value) => {
             }
         };
 
-        // --- THIS IS THE DIAGNOSTIC STEP for the preferences issue ---
         console.log("Submitting this payload to backend:", JSON.stringify(payload, null, 2));
 
         await api.post('/profile/form', payload);
@@ -323,8 +317,8 @@ const handleArrayChange = (section, index, field, value) => {
 };
 
   const navigate = useNavigate();
-
-  // Helper function to toggle section visibility
+  
+  // Function to toggle the active section
   const toggleSection = (sectionName) => {
     setActiveSection(activeSection === sectionName ? null : sectionName);
   };

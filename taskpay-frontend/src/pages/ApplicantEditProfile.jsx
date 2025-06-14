@@ -1,7 +1,6 @@
-// taskpay-frontend/src/pages/ApplicantEditProfile.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Corrected import for useNavigate
+import { useNavigate } from 'react-router-dom';
 import PersonalInfoForm from '../components/ApplicantEditProfile/PersonalInfoForm.jsx';
 import EducationalBackgroundForm from '../components/ApplicantEditProfile/EducationalBackgroundForm.jsx';
 import WorkExperienceForm from '../components/ApplicantEditProfile/WorkExperienceForm.jsx';
@@ -21,7 +20,6 @@ const ApplicantEditProfile = () => {
   const [allCategories, setAllCategories] = useState([]);
   const [allLocations, setAllLocations] = useState([]);
 
-  // useEffect to fetch data when the component loads
   useEffect(() => {
     const fetchProfileData = async () => {
         setIsLoading(true);
@@ -342,8 +340,8 @@ const handleArrayChange = (section, index, field, value) => {
             {isPreviewMode ? (
               <ProfilePreview
                 profileData={profileData}
-                allCategories={allCategories} // Pass the categories list
-                allLocations={allLocations}   // Pass the locations list
+                allCategories={allCategories} 
+                allLocations={allLocations} 
               />
             ) : (
               <>
